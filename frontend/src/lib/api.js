@@ -132,6 +132,9 @@ export const krsAPI = {
   getKHS: (tahunAkademikId = null) =>
     api.get('/mahasiswa/khs', { params: { tahun_akademik_id: tahunAkademikId } }),
   getTranskrip: () => api.get('/mahasiswa/transkrip'),
+  getProfile: () => api.get('/mahasiswa/profile'),
+  getKelasTersedia: (tahunAkademikId = null) =>
+    api.get('/mahasiswa/kelas-tersedia', { params: { tahun_akademik_id: tahunAkademikId } }),
 };
 
 // Dosen
