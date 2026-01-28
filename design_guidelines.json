@@ -1,0 +1,181 @@
+{
+  "typography": {
+    "font_family": {
+      "headings": "Plus Jakarta Sans, sans-serif",
+      "body": "Inter, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "import_instructions": "Add this to index.html or import in CSS: @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');",
+    "usage_rules": {
+      "headings": "Use Plus Jakarta Sans for all h1-h6. Tracking tight (-0.02em). Weight 600 or 700.",
+      "body": "Use Inter for all paragraphs, inputs, and table data. Tracking normal.",
+      "data": "Use tabular-nums class for all numeric data in tables (grades, SKS, tuition)."
+    }
+  },
+  "colors": {
+    "palette": {
+      "primary": {
+        "DEFAULT": "#1e1b4b",
+        "foreground": "#ffffff",
+        "description": "Deep Indigo - Authority & Academic Tradition"
+      },
+      "secondary": {
+        "DEFAULT": "#f1f5f9",
+        "foreground": "#0f172a",
+        "description": "Slate 100 - Backgrounds & Surfaces"
+      },
+      "accent": {
+        "DEFAULT": "#2563eb",
+        "foreground": "#ffffff",
+        "description": "Electric Blue - Primary Actions & Links"
+      },
+      "success": {
+        "DEFAULT": "#10b981",
+        "foreground": "#ffffff",
+        "description": "Emerald - Passed Exams, Good Standing"
+      },
+      "warning": {
+        "DEFAULT": "#f59e0b",
+        "foreground": "#ffffff",
+        "description": "Amber - Probation, Unpaid Tuition"
+      },
+      "destructive": {
+        "DEFAULT": "#e11d48",
+        "foreground": "#ffffff",
+        "description": "Rose - Failed, Drop Class, Delete"
+      },
+      "background": "#ffffff",
+      "surface": "#f8fafc"
+    },
+    "semantic_tokens": {
+      "sidebar_bg": "#1e1b4b",
+      "sidebar_text": "#e2e8f0",
+      "sidebar_active": "#312e81",
+      "header_bg": "rgba(255, 255, 255, 0.8)",
+      "card_bg": "#ffffff",
+      "border_subtle": "#e2e8f0",
+      "text_primary": "#0f172a",
+      "text_secondary": "#64748b",
+      "text_muted": "#94a3b8"
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": {
+      "header": "backdrop-blur-md bg-white/80 border-b border-slate-200/50",
+      "modal": "backdrop-blur-xl bg-white/90"
+    },
+    "shadows": {
+      "card": "shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-shadow duration-300",
+      "dropdown": "shadow-xl shadow-slate-200/50",
+      "button": "shadow-sm"
+    },
+    "borders": {
+      "default": "border border-slate-200",
+      "active": "border-blue-500 ring-2 ring-blue-500/20"
+    },
+    "radius": {
+      "card": "rounded-xl",
+      "button": "rounded-lg",
+      "input": "rounded-md"
+    }
+  },
+  "component_usage": {
+    "Card": {
+      "path": "@/components/ui/card",
+      "usage": "Use for Dashboard stats, Course summaries. Always use with 'shadow-card' class."
+    },
+    "Table": {
+      "path": "@/components/ui/table",
+      "usage": "Primary component for Master Data, Grades, KRS. Use 'w-full caption-bottom text-sm'. Header must be 'bg-slate-50'."
+    },
+    "Button": {
+      "path": "@/components/ui/button",
+      "usage": "Primary actions: 'default' variant (Indigo). Secondary: 'outline' or 'ghost'. Destructive: 'destructive'."
+    },
+    "Dialog": {
+      "path": "@/components/ui/dialog",
+      "usage": "Use for all Create/Edit forms (Add Student, Edit Grade). Do not use separate pages for simple CRUD."
+    },
+    "Badge": {
+      "path": "@/components/ui/badge",
+      "usage": "Status indicators. Green=Active/Lulus, Yellow=Cuti/Probation, Red=Drop/Tidak Lulus, Blue=Enrolled."
+    },
+    "Sonner": {
+      "path": "@/components/ui/sonner",
+      "usage": "Use for all success/error notifications. 'toast.success(\"Data saved\")'."
+    },
+    "Avatar": {
+      "path": "@/components/ui/avatar",
+      "usage": "User profile pictures in header and tables."
+    }
+  },
+  "grids": {
+    "dashboard": "grid grid-cols-1 md:grid-cols-12 gap-6 p-8",
+    "form_layout": "grid grid-cols-1 md:grid-cols-2 gap-6",
+    "card_grid": "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+  },
+  "layouts": {
+    "dashboard_shell": "flex h-screen bg-slate-50",
+    "sidebar": "w-64 flex-shrink-0 bg-[#1e1b4b] text-white hidden md:flex flex-col",
+    "main_content": "flex-1 flex flex-col overflow-hidden",
+    "page_container": "flex-1 overflow-y-auto p-8"
+  },
+  "motion": {
+    "page_transition": "initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}",
+    "hover_lift": "hover:-translate-y-1 transition-transform duration-200",
+    "list_stagger": "staggerChildren: 0.05"
+  },
+  "accessibility": {
+    "contrast": "Ensure all text on colored badges is readable. Use 'text-white' on dark badges, 'text-slate-900' on light badges.",
+    "focus": "All interactive elements must have 'focus-visible:ring-2 focus-visible:ring-blue-500' styles.",
+    "aria": "Tables must have captions. Icons must have aria-label if no text accompanies them."
+  },
+  "media": {
+    "image_urls": {
+      "login_background": {
+        "url": "https://images.unsplash.com/photo-1680444873773-7c106c23ac52?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwxfHx1bml2ZXJzaXR5JTIwY2FtcHVzJTIwbW9kZXJuJTIwYXJjaGl0ZWN0dXJlfGVufDB8fHx8MTc2OTU5NzA0Mnww&ixlib=rb-4.1.0&q=85",
+        "description": "Modern university building with stairs, inspiring ascent. Use for Login Page background with overlay."
+      },
+      "student_hero": {
+        "url": "https://images.pexels.com/photos/159775/library-la-trobe-study-students-159775.jpeg",
+        "description": "Students studying in library. Use for Student Portal Dashboard Hero."
+      },
+      "lecturer_hero": {
+        "url": "https://images.pexels.com/photos/8197557/pexels-photo-8197557.jpeg",
+        "description": "Professor teaching. Use for Lecturer Portal Dashboard."
+      },
+      "logo_placeholder": {
+        "url": "https://via.placeholder.com/150?text=SIAKAD+Logo",
+        "description": "Placeholder for university logo if none provided."
+      }
+    }
+  },
+  "3d_libraries": {
+    "charts": "Recharts (via Shadcn Charts) - Do not use 3D for data. Keep it flat and clean.",
+    "hero_elements": "None required for this professional dashboard. Focus on clean typography and spacing."
+  },
+  "instructions_to_main_agent": [
+    "1. THEME: Implement a 'Professional Academic' theme. Clean, white backgrounds, deep blue navigation.",
+    "2. LAYOUT: Use a fixed sidebar layout for the dashboard. The sidebar should be dark (#1e1b4b).",
+    "3. TABLES: This is a data-heavy app. Tables must be impeccable. Use 'compact' spacing for rows but generous padding for the container.",
+    "4. FORMS: Use Shadcn Form + React Hook Form + Zod. Validate everything.",
+    "5. LANGUAGE: All UI text must be in Indonesian (Bahasa Indonesia). e.g., 'Dashboard', 'Mahasiswa', 'Mata Kuliah', 'Nilai'.",
+    "6. ROLE-BASED: Ensure the UI adapts to the role (Admin sees everything, Student sees only their data).",
+    "7. EMPTY STATES: Always provide a helpful empty state for tables (e.g., 'Belum ada data mahasiswa. Tambahkan sekarang.')."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy",
+    "Use glass-morphism effects with backdrop filters (12-24px blur) for headers/modals only.",
+    "You MUST NOT apply universal transition. Eg: transition: all. This results in breaking transforms.",
+    "You MUST NOT center align the app container.",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations.",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Prioritize using pre-existing components from src/components/ui when applicable.",
+    "Components MUST use named exports.",
+    "Use sonner for toasts."
+  ]
+}
