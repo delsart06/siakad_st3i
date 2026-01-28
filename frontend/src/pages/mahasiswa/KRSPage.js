@@ -62,6 +62,10 @@ const KRSPage = () => {
 
   const loadInitialData = async () => {
     try {
+      // Load mahasiswa profile
+      const profileRes = await mahasiswaAPI.getProfile();
+      setMahasiswa(profileRes.data);
+      
       const taResponse = await tahunAkademikAPI.getAll();
       setTahunAkademikList(taResponse.data);
       
