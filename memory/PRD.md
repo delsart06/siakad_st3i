@@ -68,9 +68,14 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
   - Validasi KRS (approve/reject)
 - ✅ User Management (toggle active users)
 - ✅ **Portal Mahasiswa:**
-  - **KRS Page** - Enrollment mata kuliah dengan summary cards, pilih kelas dialog
-  - **KHS Page** - Hasil studi per semester dengan selector tahun akademik
+  - **KRS Page** - Enrollment mata kuliah dengan summary cards, pilih kelas dialog, **Cetak PDF**
+  - **KHS Page** - Hasil studi per semester dengan selector tahun akademik, **Cetak PDF**
   - **Transkrip Page** - Rekap nilai lengkap dengan cetak/download PDF
+- ✅ **Portal Dosen PA:**
+  - **Validasi KRS PA** - List mahasiswa bimbingan, approve/reject KRS
+- ✅ **PDF Components:**
+  - KRSPdf - PDF template untuk cetak KRS
+  - KHSPdf - PDF template untuk cetak KHS
 - ✅ Toast notifications (sonner)
 - ✅ Indonesian language throughout
 
