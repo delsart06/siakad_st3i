@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { krsAPI, tahunAkademikAPI } from '../../lib/api';
+import { krsAPI, tahunAkademikAPI, mahasiswaAPI } from '../../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
 import {
   Select,
   SelectContent,
@@ -17,8 +18,10 @@ import {
   TableHeader,
   TableRow,
 } from '../../components/ui/table';
-import { Loader2, FileText, TrendingUp, BookOpen, Award } from 'lucide-react';
+import { Loader2, FileText, TrendingUp, BookOpen, Award, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
+import { pdf } from '@react-pdf/renderer';
+import KHSPdf from '../../components/pdf/KHSPdf';
 
 const KHSPage = () => {
   const [khsData, setKhsData] = useState(null);
