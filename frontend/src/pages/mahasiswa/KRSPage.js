@@ -216,13 +216,23 @@ const KRSPage = () => {
               : 'Tidak ada tahun akademik aktif'}
           </p>
         </div>
-        <Button 
-          onClick={() => setDialogOpen(true)} 
-          className="bg-[#1e1b4b] hover:bg-[#312e81]"
-          disabled={!activeTahunAkademik}
-          data-testid="add-krs-btn"
-        >
-          <Plus className="w-4 h-4 mr-2" />
+        <div className="flex gap-2">
+          <Button 
+            onClick={handlePrintPDF}
+            variant="outline"
+            disabled={!activeTahunAkademik || myKRS.length === 0 || printing}
+            data-testid="print-krs-btn"
+          >
+            {printing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileDown className="w-4 h-4 mr-2" />}
+            Cetak PDF
+          </Button>
+          <Button 
+            onClick={() => setDialogOpen(true)} 
+            className="bg-[#1e1b4b] hover:bg-[#312e81]"
+            disabled={!activeTahunAkademik}
+            data-testid="add-krs-btn"
+          >
+            <Plus className="w-4 h-4 mr-2" />
           Tambah Mata Kuliah
         </Button>
       </div>
