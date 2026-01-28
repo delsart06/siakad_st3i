@@ -23,6 +23,7 @@ const pageTitles = {
   '/mahasiswa/transkrip': 'Transkrip Nilai',
   '/dosen/kelas': 'Kelas Saya',
   '/dosen/nilai': 'Input Nilai',
+  '/dosen/validasi-krs': 'Validasi KRS Mahasiswa PA',
 };
 
 const DashboardLayout = () => {
