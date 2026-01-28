@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { krsAPI, tahunAkademikAPI, mahasiswaAPI } from '../../lib/api';
+import { krsAPI, tahunAkademikAPI } from '../../lib/api';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
