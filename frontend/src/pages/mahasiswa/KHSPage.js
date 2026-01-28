@@ -95,6 +95,41 @@ const KHSPage = () => {
 
   const selectedTAData = tahunAkademikList.find(ta => ta.id === selectedTA);
 
+  // Handle PDF print
+  const handlePrintPDF = async () => {
+    if (!selectedTAData || !khsData) {
+      toast.error('Tidak ada data KHS untuk dicetak');
+      return;
+    }
+    
+    setPrinting(true);
+    try {
+      const blob = await pdf(
+        <KHSPdf 
+          mahasiswa={mahasiswa}
+          tahunAkademik={selectedTAData}
+          khsData={khsData}
+        />
+      ).toBlob();
+      
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `KHS_${mahasiswa?.nim || khsData?.mahasiswa?.nim || 'unknown'}_${selectedTAData?.tahun?.replace('/', '-') || ''}_${selectedTAData?.semester || ''}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success('PDF berhasil diunduh');
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error('Gagal membuat PDF');
+    } finally {
+      setPrinting(false);
+    }
+  };
+
   if (loading && !khsData) {
     return (
       <div className="flex items-center justify-center h-64">
