@@ -9,7 +9,7 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
 
 ### User Personas
 1. **Admin** - Super administrator who manages all master data, users, and academic operations
-2. **Dosen (Lecturer)** - Inputs grades, views assigned classes
+2. **Dosen (Lecturer)** - Inputs grades, views assigned classes, validates KRS as Dosen PA
 3. **Mahasiswa (Student)** - Enrolls in courses (KRS), views grades (KHS), downloads transcripts
 
 ### Core Requirements (Static)
@@ -42,11 +42,14 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
   - KHS & Transkrip (IPK calculation)
 - ✅ Dashboard Stats API
 - ✅ **Mahasiswa Portal APIs:**
-  - Profile mahasiswa
+  - Profile mahasiswa (with dosen_pa_nama)
   - Kelas tersedia untuk enrollment
-  - KRS mahasiswa (get, create, delete)
+  - KRS mahasiswa (get, create, delete) with kode_mk
   - KHS dengan IPK per semester
   - Transkrip lengkap dengan IPK kumulatif
+- ✅ **Dosen PA APIs:**
+  - Mahasiswa bimbingan list
+  - KRS bimbingan (approve/reject)
 
 #### Frontend (React)
 - ✅ Login Page with beautiful university background
