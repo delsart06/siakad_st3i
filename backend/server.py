@@ -155,6 +155,7 @@ class MahasiswaBase(BaseModel):
     tanggal_lahir: Optional[str] = None
     alamat: Optional[str] = None
     no_hp: Optional[str] = None
+    dosen_pa_id: Optional[str] = None  # Dosen Pembimbing Akademik
 
 class MahasiswaCreate(MahasiswaBase):
     password: str
@@ -163,6 +164,7 @@ class MahasiswaResponse(MahasiswaBase):
     id: str
     user_id: Optional[str] = None
     prodi_nama: Optional[str] = None
+    dosen_pa_nama: Optional[str] = None
 
 # Dosen
 class DosenBase(BaseModel):
