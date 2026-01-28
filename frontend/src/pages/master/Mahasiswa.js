@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { mahasiswaAPI, prodiAPI } from '../../lib/api';
+import { mahasiswaAPI, prodiAPI, dosenAPI } from '../../lib/api';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -27,12 +27,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../components/ui/select';
-import { Plus, Pencil, Trash2, Loader2, GraduationCap, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, GraduationCap, Search, UserCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Mahasiswa = () => {
   const [data, setData] = useState([]);
   const [prodiList, setProdiList] = useState([]);
+  const [dosenList, setDosenList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -48,6 +49,11 @@ const Mahasiswa = () => {
     prodi_id: '',
     tahun_masuk: '',
     status: 'aktif',
+    jenis_kelamin: '',
+    no_hp: '',
+    password: '',
+    dosen_pa_id: '',
+  });
     jenis_kelamin: '',
     no_hp: '',
     password: '',
