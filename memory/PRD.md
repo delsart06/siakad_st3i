@@ -116,14 +116,18 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
 1. ~~Implement Student KRS enrollment page~~ ✅
 2. ~~Implement Student KHS and Transkrip views~~ ✅
 3. ~~Implement Dosen PA KRS validation~~ ✅
-4. Implement Lecturer (Dosen) grade input interface
-5. Add Jadwal/Schedule management
-6. Improve PDF quality for transcripts
+4. ~~Implement PDF generation for KRS & KHS~~ ✅
+5. Implement Lecturer (Dosen) grade input interface
+6. Add Dosen Jadwal Mengajar page
+7. Add Dosen Daftar Mahasiswa per Kelas page
 
 ---
 
 ## Technical Notes
 - Default Admin: admin@siakad.ac.id / admin123
+- Test Mahasiswa: midel@siakad.ac.id / password
+- Test Dosen PA: ahmad.pa@dosen.ac.id / password
 - MongoDB collections: users, mahasiswa, dosen, fakultas, prodi, kurikulum, mata_kuliah, tahun_akademik, kelas, krs, nilai
 - All timestamps in UTC ISO format
 - Password hashing with bcrypt
+- PDF generation using @react-pdf/renderer
