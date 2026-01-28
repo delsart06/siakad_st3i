@@ -1108,10 +1108,17 @@ async def get_mahasiswa_profile(current_user: dict = Depends(get_current_user)):
     if prodi:
         fakultas = await db.fakultas.find_one({"id": prodi.get("fakultas_id")}, {"_id": 0})
     
+    # Get dosen PA nama
+    dosen_pa_nama = None
+    if mhs.get("dosen_pa_id"):
+        dosen_pa = await db.dosen.find_one({"id": mhs["dosen_pa_id"]}, {"_id": 0})
+        dosen_pa_nama = dosen_pa["nama"] if dosen_pa else None
+    
     return {
         **mhs,
         "prodi_nama": prodi["nama"] if prodi else None,
-        "fakultas_nama": fakultas["nama"] if fakultas else None
+        "fakultas_nama": fakultas["nama"] if fakultas else None,
+        "dosen_pa_nama": dosen_pa_nama
     }
 
 # Get available kelas for mahasiswa
