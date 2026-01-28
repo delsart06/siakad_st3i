@@ -41,6 +41,12 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
   - Nilai (grade input, auto-calculation A-E)
   - KHS & Transkrip (IPK calculation)
 - ✅ Dashboard Stats API
+- ✅ **Mahasiswa Portal APIs:**
+  - Profile mahasiswa
+  - Kelas tersedia untuk enrollment
+  - KRS mahasiswa (get, create, delete)
+  - KHS dengan IPK per semester
+  - Transkrip lengkap dengan IPK kumulatif
 
 #### Frontend (React)
 - ✅ Login Page with beautiful university background
@@ -58,6 +64,10 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
   - Penawaran Kelas (table, CRUD)
   - Validasi KRS (approve/reject)
 - ✅ User Management (toggle active users)
+- ✅ **Portal Mahasiswa:**
+  - **KRS Page** - Enrollment mata kuliah dengan summary cards, pilih kelas dialog
+  - **KHS Page** - Hasil studi per semester dengan selector tahun akademik
+  - **Transkrip Page** - Rekap nilai lengkap dengan cetak/download PDF
 - ✅ Toast notifications (sonner)
 - ✅ Indonesian language throughout
 
@@ -66,15 +76,15 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
 ## Prioritized Backlog
 
 ### P0 (Critical - Next Phase)
-1. Mahasiswa Portal - KRS page for students to enroll
-2. Mahasiswa Portal - KHS page to view semester grades
-3. Mahasiswa Portal - Transkrip page with print/PDF
+1. ~~Mahasiswa Portal - KRS page for students to enroll~~ ✅ DONE
+2. ~~Mahasiswa Portal - KHS page to view semester grades~~ ✅ DONE
+3. ~~Mahasiswa Portal - Transkrip page with print/PDF~~ ✅ DONE
 4. Dosen Portal - Kelas management & grade input UI
 
 ### P1 (High Priority)
 1. Jadwal Kuliah - Schedule management with conflict detection
 2. Presensi - Attendance tracking
-3. Cetak Dokumen - PDF generation for academic documents
+3. Cetak Dokumen - PDF generation for other academic documents
 4. Password reset functionality
 
 ### P2 (Medium Priority)
@@ -92,11 +102,11 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
 ---
 
 ## Next Tasks
-1. Implement Student KRS enrollment page
-2. Implement Student KHS and Transkrip views
-3. Implement Lecturer grade input interface
+1. ~~Implement Student KRS enrollment page~~ ✅
+2. ~~Implement Student KHS and Transkrip views~~ ✅
+3. Implement Lecturer (Dosen) grade input interface
 4. Add Jadwal/Schedule management
-5. Implement PDF generation for transcripts
+5. Improve PDF quality for transcripts
 
 ---
 
