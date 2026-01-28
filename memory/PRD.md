@@ -88,13 +88,15 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
 2. ~~Mahasiswa Portal - KHS page to view semester grades~~ ✅ DONE
 3. ~~Mahasiswa Portal - Transkrip page with print/PDF~~ ✅ DONE
 4. ~~Dosen PA - Validasi KRS mahasiswa bimbingan~~ ✅ DONE
-5. Dosen Portal - Input Nilai mahasiswa
+5. ~~Cetak PDF KRS dan KHS~~ ✅ DONE
+6. Dosen Portal - Input Nilai mahasiswa
 
 ### P1 (High Priority)
-1. Jadwal Kuliah - Schedule management with conflict detection
-2. Presensi - Attendance tracking
-3. Cetak Dokumen - PDF generation for other academic documents
-4. Password reset functionality
+1. Dosen Portal - Jadwal Mengajar
+2. Dosen Portal - Daftar Mahasiswa per Kelas
+3. Jadwal Kuliah - Schedule management with conflict detection
+4. Presensi - Attendance tracking
+5. Password reset functionality
 
 ### P2 (Medium Priority)
 1. Keuangan Module - UKT/SPP integration
