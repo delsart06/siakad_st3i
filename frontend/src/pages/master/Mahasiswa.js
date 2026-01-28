@@ -373,6 +373,24 @@ const Mahasiswa = () => {
                 <Input id="no_hp" placeholder="08xxxxxxxxxx" value={form.no_hp} onChange={(e) => setForm({ ...form, no_hp: e.target.value })} data-testid="input-nohp-mhs" />
               </div>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="dosen_pa">Dosen Pembimbing Akademik (PA)</Label>
+              <Select value={form.dosen_pa_id || undefined} onValueChange={(value) => setForm({ ...form, dosen_pa_id: value })}>
+                <SelectTrigger data-testid="select-dosen-pa">
+                  <SelectValue placeholder="Pilih Dosen PA" />
+                </SelectTrigger>
+                <SelectContent>
+                  {dosenList.map((dosen) => (
+                    <SelectItem key={dosen.id} value={dosen.id}>
+                      <div className="flex items-center gap-2">
+                        <UserCircle className="w-4 h-4" />
+                        {dosen.nama}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Batal</Button>
               <Button type="submit" disabled={saving} className="bg-[#1e1b4b] hover:bg-[#312e81]" data-testid="submit-mhs">
