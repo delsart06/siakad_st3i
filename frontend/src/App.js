@@ -17,6 +17,7 @@ import UserManagement from './pages/UserManagement';
 import KRSPage from './pages/mahasiswa/KRSPage';
 import KHSPage from './pages/mahasiswa/KHSPage';
 import TranskripPage from './pages/mahasiswa/TranskripPage';
+import ValidasiKRSDosenPA from './pages/dosen/ValidasiKRSDosenPA';
 import './App.css';
 
 function App() {
@@ -51,6 +52,9 @@ function App() {
             <Route path="/mahasiswa/krs" element={<KRSPage />} />
             <Route path="/mahasiswa/khs" element={<KHSPage />} />
             <Route path="/mahasiswa/transkrip" element={<TranskripPage />} />
+            
+            {/* Dosen Portal */}
+            <Route path="/dosen/validasi-krs" element={<ValidasiKRSDosenPA />} />
           </Route>
           
           {/* Catch all */}
