@@ -28,11 +28,10 @@ const KHSPage = () => {
   const [tahunAkademikList, setTahunAkademikList] = useState([]);
   const [selectedTA, setSelectedTA] = useState('');
   const [loading, setLoading] = useState(true);
-  const [mahasiswa, setMahasiswa] = useState(null);
   const [printing, setPrinting] = useState(false);
 
   useEffect(() => {
-    loadInitialData();
+    loadTahunAkademik();
   }, []);
 
   useEffect(() => {
@@ -41,12 +40,8 @@ const KHSPage = () => {
     }
   }, [selectedTA]);
 
-  const loadInitialData = async () => {
+  const loadTahunAkademik = async () => {
     try {
-      // Load mahasiswa profile
-      const profileRes = await mahasiswaAPI.getProfile();
-      setMahasiswa(profileRes.data);
-      
       const response = await tahunAkademikAPI.getAll();
       setTahunAkademikList(response.data);
       
