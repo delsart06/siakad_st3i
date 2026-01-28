@@ -233,8 +233,9 @@ const KRSPage = () => {
             data-testid="add-krs-btn"
           >
             <Plus className="w-4 h-4 mr-2" />
-          Tambah Mata Kuliah
-        </Button>
+            Tambah Mata Kuliah
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
