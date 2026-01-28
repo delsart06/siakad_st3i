@@ -217,6 +217,7 @@ class KRSCreate(BaseModel):
 class KRSResponse(KRSBase):
     id: str
     mata_kuliah_nama: Optional[str] = None
+    kode_mk: Optional[str] = None
     sks: int = 0
     dosen_nama: Optional[str] = None
     jadwal: Optional[str] = None
