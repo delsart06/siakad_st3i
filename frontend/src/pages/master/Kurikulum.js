@@ -221,7 +221,7 @@ const Kurikulum = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="prodi">Program Studi</Label>
-              <Select value={form.prodi_id} onValueChange={(value) => setForm({ ...form, prodi_id: value })}>
+              <Select value={form.prodi_id || undefined} onValueChange={(value) => setForm({ ...form, prodi_id: value })}>
                 <SelectTrigger data-testid="select-prodi-kur">
                   <SelectValue placeholder="Pilih program studi" />
                 </SelectTrigger>

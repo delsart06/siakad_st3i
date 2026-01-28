@@ -112,12 +112,12 @@ const ValidasiKRS = () => {
           </Select>
         </div>
         <div className="w-48">
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <Select value={filterStatus || undefined} onValueChange={(val) => setFilterStatus(val === 'all' ? '' : val)}>
             <SelectTrigger data-testid="filter-status-krs">
               <SelectValue placeholder="Filter Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Semua Status</SelectItem>
+              <SelectItem value="all">Semua Status</SelectItem>
               <SelectItem value="diajukan">Diajukan</SelectItem>
               <SelectItem value="disetujui">Disetujui</SelectItem>
               <SelectItem value="ditolak">Ditolak</SelectItem>

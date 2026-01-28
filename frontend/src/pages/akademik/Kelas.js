@@ -175,12 +175,12 @@ const Kelas = () => {
 
       {/* Filter */}
       <div className="w-64">
-        <Select value={filterTA} onValueChange={setFilterTA}>
+        <Select value={filterTA || undefined} onValueChange={(val) => setFilterTA(val === 'all' ? '' : val)}>
           <SelectTrigger data-testid="filter-ta-kelas">
             <SelectValue placeholder="Filter Tahun Akademik" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Semua Tahun Akademik</SelectItem>
+            <SelectItem value="all">Semua Tahun Akademik</SelectItem>
             {tahunAkademikList.map((ta) => (
               <SelectItem key={ta.id} value={ta.id}>
                 {ta.tahun} - {ta.semester} {ta.is_active && '(Aktif)'}
@@ -265,7 +265,7 @@ const Kelas = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="mata_kuliah">Mata Kuliah</Label>
-              <Select value={form.mata_kuliah_id} onValueChange={(value) => setForm({ ...form, mata_kuliah_id: value })}>
+              <Select value={form.mata_kuliah_id || undefined} onValueChange={(value) => setForm({ ...form, mata_kuliah_id: value })}>
                 <SelectTrigger data-testid="select-mk-kelas">
                   <SelectValue placeholder="Pilih mata kuliah" />
                 </SelectTrigger>
@@ -278,7 +278,7 @@ const Kelas = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="dosen">Dosen Pengampu</Label>
-              <Select value={form.dosen_id} onValueChange={(value) => setForm({ ...form, dosen_id: value })}>
+              <Select value={form.dosen_id || undefined} onValueChange={(value) => setForm({ ...form, dosen_id: value })}>
                 <SelectTrigger data-testid="select-dosen-kelas">
                   <SelectValue placeholder="Pilih dosen" />
                 </SelectTrigger>
@@ -291,7 +291,7 @@ const Kelas = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="tahun_akademik">Tahun Akademik</Label>
-              <Select value={form.tahun_akademik_id} onValueChange={(value) => setForm({ ...form, tahun_akademik_id: value })}>
+              <Select value={form.tahun_akademik_id || undefined} onValueChange={(value) => setForm({ ...form, tahun_akademik_id: value })}>
                 <SelectTrigger data-testid="select-ta-kelas">
                   <SelectValue placeholder="Pilih tahun akademik" />
                 </SelectTrigger>

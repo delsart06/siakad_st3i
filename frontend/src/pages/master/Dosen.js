@@ -248,7 +248,7 @@ const Dosen = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="jenis_kelamin">Jenis Kelamin</Label>
-                <Select value={form.jenis_kelamin} onValueChange={(value) => setForm({ ...form, jenis_kelamin: value })}>
+                <Select value={form.jenis_kelamin || undefined} onValueChange={(value) => setForm({ ...form, jenis_kelamin: value })}>
                   <SelectTrigger data-testid="select-jk-dosen">
                     <SelectValue placeholder="Pilih jenis kelamin" />
                   </SelectTrigger>
@@ -276,7 +276,7 @@ const Dosen = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="prodi">Program Studi</Label>
-                <Select value={form.prodi_id} onValueChange={(value) => setForm({ ...form, prodi_id: value })}>
+                <Select value={form.prodi_id || undefined} onValueChange={(value) => setForm({ ...form, prodi_id: value })}>
                   <SelectTrigger data-testid="select-prodi-dosen">
                     <SelectValue placeholder="Pilih prodi" />
                   </SelectTrigger>
@@ -289,7 +289,7 @@ const Dosen = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="jabatan">Jabatan Fungsional</Label>
-                <Select value={form.jabatan_fungsional} onValueChange={(value) => setForm({ ...form, jabatan_fungsional: value })}>
+                <Select value={form.jabatan_fungsional || undefined} onValueChange={(value) => setForm({ ...form, jabatan_fungsional: value })}>
                   <SelectTrigger data-testid="select-jabatan-dosen">
                     <SelectValue placeholder="Pilih jabatan" />
                   </SelectTrigger>

@@ -161,12 +161,12 @@ const MataKuliah = () => {
       {/* Filter */}
       <div className="flex items-center gap-4">
         <div className="w-64">
-          <Select value={filterKurikulum} onValueChange={setFilterKurikulum}>
+          <Select value={filterKurikulum || undefined} onValueChange={(val) => setFilterKurikulum(val === 'all' ? '' : val)}>
             <SelectTrigger data-testid="filter-kurikulum">
               <SelectValue placeholder="Filter Kurikulum" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Semua Kurikulum</SelectItem>
+              <SelectItem value="all">Semua Kurikulum</SelectItem>
               {kurikulumList.map((kur) => (
                 <SelectItem key={kur.id} value={kur.id}>{kur.nama}</SelectItem>
               ))}
@@ -272,7 +272,7 @@ const MataKuliah = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="kurikulum">Kurikulum</Label>
-              <Select value={form.kurikulum_id} onValueChange={(value) => setForm({ ...form, kurikulum_id: value })}>
+              <Select value={form.kurikulum_id || undefined} onValueChange={(value) => setForm({ ...form, kurikulum_id: value })}>
                 <SelectTrigger data-testid="select-kurikulum-mk">
                   <SelectValue placeholder="Pilih kurikulum" />
                 </SelectTrigger>

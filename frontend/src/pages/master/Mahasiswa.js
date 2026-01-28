@@ -204,12 +204,12 @@ const Mahasiswa = () => {
           />
         </div>
         <div className="w-48">
-          <Select value={filterProdi} onValueChange={setFilterProdi}>
+          <Select value={filterProdi || undefined} onValueChange={(val) => setFilterProdi(val === 'all' ? '' : val)}>
             <SelectTrigger data-testid="filter-prodi-mhs">
               <SelectValue placeholder="Filter Prodi" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Semua Prodi</SelectItem>
+              <SelectItem value="all">Semua Prodi</SelectItem>
               {prodiList.map((prodi) => (
                 <SelectItem key={prodi.id} value={prodi.id}>{prodi.nama}</SelectItem>
               ))}
@@ -217,12 +217,12 @@ const Mahasiswa = () => {
           </Select>
         </div>
         <div className="w-40">
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <Select value={filterStatus || undefined} onValueChange={(val) => setFilterStatus(val === 'all' ? '' : val)}>
             <SelectTrigger data-testid="filter-status-mhs">
               <SelectValue placeholder="Filter Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Semua Status</SelectItem>
+              <SelectItem value="all">Semua Status</SelectItem>
               <SelectItem value="aktif">Aktif</SelectItem>
               <SelectItem value="cuti">Cuti</SelectItem>
               <SelectItem value="lulus">Lulus</SelectItem>
@@ -315,7 +315,7 @@ const Mahasiswa = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="prodi">Program Studi</Label>
-                <Select value={form.prodi_id} onValueChange={(value) => setForm({ ...form, prodi_id: value })}>
+                <Select value={form.prodi_id || undefined} onValueChange={(value) => setForm({ ...form, prodi_id: value })}>
                   <SelectTrigger data-testid="select-prodi-mhs">
                     <SelectValue placeholder="Pilih prodi" />
                   </SelectTrigger>
@@ -344,7 +344,7 @@ const Mahasiswa = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="jenis_kelamin">Jenis Kelamin</Label>
-                <Select value={form.jenis_kelamin} onValueChange={(value) => setForm({ ...form, jenis_kelamin: value })}>
+                <Select value={form.jenis_kelamin || undefined} onValueChange={(value) => setForm({ ...form, jenis_kelamin: value })}>
                   <SelectTrigger data-testid="select-jk-mhs">
                     <SelectValue placeholder="Pilih jenis kelamin" />
                   </SelectTrigger>

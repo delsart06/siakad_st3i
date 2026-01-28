@@ -239,7 +239,7 @@ const Prodi = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="fakultas">Fakultas</Label>
-              <Select value={form.fakultas_id} onValueChange={(value) => setForm({ ...form, fakultas_id: value })}>
+              <Select value={form.fakultas_id || undefined} onValueChange={(value) => setForm({ ...form, fakultas_id: value })}>
                 <SelectTrigger data-testid="select-fakultas">
                   <SelectValue placeholder="Pilih fakultas" />
                 </SelectTrigger>
