@@ -146,19 +146,30 @@ const KHSPage = () => {
           <h2 className="text-lg font-semibold text-slate-800">Kartu Hasil Studi (KHS)</h2>
           <p className="text-sm text-slate-500">Lihat hasil studi per semester</p>
         </div>
-        <div className="w-64">
-          <Select value={selectedTA} onValueChange={setSelectedTA}>
-            <SelectTrigger data-testid="select-ta-khs">
-              <SelectValue placeholder="Pilih Tahun Akademik" />
-            </SelectTrigger>
-            <SelectContent>
-              {tahunAkademikList.map((ta) => (
-                <SelectItem key={ta.id} value={ta.id}>
-                  {ta.tahun} - {ta.semester} {ta.is_active && '(Aktif)'}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex gap-2 items-center">
+          <div className="w-64">
+            <Select value={selectedTA} onValueChange={setSelectedTA}>
+              <SelectTrigger data-testid="select-ta-khs">
+                <SelectValue placeholder="Pilih Tahun Akademik" />
+              </SelectTrigger>
+              <SelectContent>
+                {tahunAkademikList.map((ta) => (
+                  <SelectItem key={ta.id} value={ta.id}>
+                    {ta.tahun} - {ta.semester} {ta.is_active && '(Aktif)'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button 
+            onClick={handlePrintPDF}
+            variant="outline"
+            disabled={!selectedTAData || !khsData || printing}
+            data-testid="print-khs-btn"
+          >
+            {printing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileDown className="w-4 h-4 mr-2" />}
+            Cetak PDF
+          </Button>
         </div>
       </div>
 
