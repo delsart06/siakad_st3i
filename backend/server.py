@@ -696,6 +696,12 @@ async def get_mahasiswa(
     for item in items:
         prodi = await db.prodi.find_one({"id": item["prodi_id"]}, {"_id": 0})
         item["prodi_nama"] = prodi["nama"] if prodi else None
+        # Add dosen PA nama
+        if item.get("dosen_pa_id"):
+            dosen_pa = await db.dosen.find_one({"id": item["dosen_pa_id"]}, {"_id": 0})
+            item["dosen_pa_nama"] = dosen_pa["nama"] if dosen_pa else None
+        else:
+            item["dosen_pa_nama"] = None
     
     return items
 
@@ -733,7 +739,12 @@ async def create_mahasiswa(
     await db.mahasiswa.insert_one(doc)
     
     prodi = await db.prodi.find_one({"id": data.prodi_id}, {"_id": 0})
-    return MahasiswaResponse(**doc, prodi_nama=prodi["nama"] if prodi else None)
+    dosen_pa_nama = None
+    if data.dosen_pa_id:
+        dosen_pa = await db.dosen.find_one({"id": data.dosen_pa_id}, {"_id": 0})
+        dosen_pa_nama = dosen_pa["nama"] if dosen_pa else None
+    
+    return MahasiswaResponse(**doc, prodi_nama=prodi["nama"] if prodi else None, dosen_pa_nama=dosen_pa_nama)
 
 @master_router.put("/mahasiswa/{item_id}", response_model=MahasiswaResponse)
 async def update_mahasiswa(
@@ -747,7 +758,12 @@ async def update_mahasiswa(
     await db.mahasiswa.update_one({"id": item_id}, {"$set": data.model_dump()})
     updated = await db.mahasiswa.find_one({"id": item_id}, {"_id": 0})
     prodi = await db.prodi.find_one({"id": updated["prodi_id"]}, {"_id": 0})
-    return MahasiswaResponse(**updated, prodi_nama=prodi["nama"] if prodi else None)
+    dosen_pa_nama = None
+    if updated.get("dosen_pa_id"):
+        dosen_pa = await db.dosen.find_one({"id": updated["dosen_pa_id"]}, {"_id": 0})
+        dosen_pa_nama = dosen_pa["nama"] if dosen_pa else None
+    
+    return MahasiswaResponse(**updated, prodi_nama=prodi["nama"] if prodi else None, dosen_pa_nama=dosen_pa_nama)
 
 @master_router.delete("/mahasiswa/{item_id}")
 async def delete_mahasiswa(
