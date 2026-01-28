@@ -54,13 +54,10 @@ const Mahasiswa = () => {
     password: '',
     dosen_pa_id: '',
   });
-    jenis_kelamin: '',
-    no_hp: '',
-    password: '',
-  });
 
   useEffect(() => {
     loadProdi();
+    loadDosen();
   }, []);
 
   useEffect(() => {
@@ -90,6 +87,15 @@ const Mahasiswa = () => {
     }
   };
 
+  const loadDosen = async () => {
+    try {
+      const response = await dosenAPI.getAll();
+      setDosenList(response.data);
+    } catch (error) {
+      console.error('Failed to load dosen');
+    }
+  };
+
   const openDialog = (item = null) => {
     if (item) {
       setEditingItem(item);
@@ -103,6 +109,7 @@ const Mahasiswa = () => {
         jenis_kelamin: item.jenis_kelamin || '',
         no_hp: item.no_hp || '',
         password: '',
+        dosen_pa_id: item.dosen_pa_id || '',
       });
     } else {
       setEditingItem(null);
@@ -116,6 +123,7 @@ const Mahasiswa = () => {
         jenis_kelamin: '',
         no_hp: '',
         password: '',
+        dosen_pa_id: '',
       });
     }
     setDialogOpen(true);
