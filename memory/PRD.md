@@ -79,7 +79,8 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
 1. ~~Mahasiswa Portal - KRS page for students to enroll~~ ✅ DONE
 2. ~~Mahasiswa Portal - KHS page to view semester grades~~ ✅ DONE
 3. ~~Mahasiswa Portal - Transkrip page with print/PDF~~ ✅ DONE
-4. Dosen Portal - Kelas management & grade input UI
+4. ~~Dosen PA - Validasi KRS mahasiswa bimbingan~~ ✅ DONE
+5. Dosen Portal - Input Nilai mahasiswa
 
 ### P1 (High Priority)
 1. Jadwal Kuliah - Schedule management with conflict detection
@@ -104,9 +105,10 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
 ## Next Tasks
 1. ~~Implement Student KRS enrollment page~~ ✅
 2. ~~Implement Student KHS and Transkrip views~~ ✅
-3. Implement Lecturer (Dosen) grade input interface
-4. Add Jadwal/Schedule management
-5. Improve PDF quality for transcripts
+3. ~~Implement Dosen PA KRS validation~~ ✅
+4. Implement Lecturer (Dosen) grade input interface
+5. Add Jadwal/Schedule management
+6. Improve PDF quality for transcripts
 
 ---
 
