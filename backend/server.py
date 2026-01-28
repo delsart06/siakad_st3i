@@ -1074,6 +1074,7 @@ async def create_krs(
     return KRSResponse(
         **doc,
         mata_kuliah_nama=mk["nama"] if mk else None,
+        kode_mk=mk["kode"] if mk else None,
         sks=(mk.get("sks_teori", 0) + mk.get("sks_praktik", 0)) if mk else 0,
         dosen_nama=dosen["nama"] if dosen else None,
         jadwal=kelas.get("jadwal")
