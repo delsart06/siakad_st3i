@@ -161,6 +161,41 @@ const KRSPage = () => {
     kelas => !enrolledKelasIds.includes(kelas.id)
   );
 
+  // Handle PDF print
+  const handlePrintPDF = async () => {
+    if (!activeTahunAkademik || myKRS.length === 0) {
+      toast.error('Tidak ada data KRS untuk dicetak');
+      return;
+    }
+    
+    setPrinting(true);
+    try {
+      const blob = await pdf(
+        <KRSPdf 
+          mahasiswa={mahasiswa}
+          tahunAkademik={activeTahunAkademik}
+          krsData={myKRS}
+        />
+      ).toBlob();
+      
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `KRS_${mahasiswa?.nim || 'unknown'}_${activeTahunAkademik?.tahun?.replace('/', '-') || ''}_${activeTahunAkademik?.semester || ''}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success('PDF berhasil diunduh');
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error('Gagal membuat PDF');
+    } finally {
+      setPrinting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
