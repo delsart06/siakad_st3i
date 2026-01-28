@@ -1152,28 +1152,72 @@ async def get_available_kelas(
     
     return result
 
-# Admin approve/reject KRS
+# Admin or Dosen PA approve/reject KRS
 @akademik_router.put("/krs/{item_id}/approve")
 async def approve_krs(
     item_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Check if admin or dosen PA
+    if current_user["role"] == "admin":
+        await db.krs.update_one({"id": item_id}, {"$set": {"status": "disetujui", "approved_by": current_user["id"]}})
+        return {"message": "KRS disetujui"}
     
-    await db.krs.update_one({"id": item_id}, {"$set": {"status": "disetujui"}})
-    return {"message": "KRS disetujui"}
+    if current_user["role"] == "dosen":
+        # Check if this dosen is PA for this mahasiswa
+        krs = await db.krs.find_one({"id": item_id}, {"_id": 0})
+        if not krs:
+            raise HTTPException(status_code=404, detail="KRS tidak ditemukan")
+        
+        mhs = await db.mahasiswa.find_one({"id": krs["mahasiswa_id"]}, {"_id": 0})
+        dosen = await db.dosen.find_one({"user_id": current_user["id"]}, {"_id": 0})
+        
+        if not mhs or not dosen:
+            raise HTTPException(status_code=403, detail="Akses ditolak")
+        
+        if mhs.get("dosen_pa_id") != dosen["id"]:
+            raise HTTPException(status_code=403, detail="Anda bukan Dosen PA mahasiswa ini")
+        
+        await db.krs.update_one({"id": item_id}, {"$set": {"status": "disetujui", "approved_by": current_user["id"]}})
+        return {"message": "KRS disetujui oleh Dosen PA"}
+    
+    raise HTTPException(status_code=403, detail="Akses ditolak")
 
 @akademik_router.put("/krs/{item_id}/reject")
 async def reject_krs(
     item_id: str,
+    catatan: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Check if admin or dosen PA
+    if current_user["role"] == "admin":
+        update_data = {"status": "ditolak", "rejected_by": current_user["id"]}
+        if catatan:
+            update_data["catatan_penolakan"] = catatan
+        await db.krs.update_one({"id": item_id}, {"$set": update_data})
+        return {"message": "KRS ditolak"}
     
-    await db.krs.update_one({"id": item_id}, {"$set": {"status": "ditolak"}})
-    return {"message": "KRS ditolak"}
+    if current_user["role"] == "dosen":
+        krs = await db.krs.find_one({"id": item_id}, {"_id": 0})
+        if not krs:
+            raise HTTPException(status_code=404, detail="KRS tidak ditemukan")
+        
+        mhs = await db.mahasiswa.find_one({"id": krs["mahasiswa_id"]}, {"_id": 0})
+        dosen = await db.dosen.find_one({"user_id": current_user["id"]}, {"_id": 0})
+        
+        if not mhs or not dosen:
+            raise HTTPException(status_code=403, detail="Akses ditolak")
+        
+        if mhs.get("dosen_pa_id") != dosen["id"]:
+            raise HTTPException(status_code=403, detail="Anda bukan Dosen PA mahasiswa ini")
+        
+        update_data = {"status": "ditolak", "rejected_by": current_user["id"]}
+        if catatan:
+            update_data["catatan_penolakan"] = catatan
+        await db.krs.update_one({"id": item_id}, {"$set": update_data})
+        return {"message": "KRS ditolak oleh Dosen PA"}
+    
+    raise HTTPException(status_code=403, detail="Akses ditolak")
 
 # Get all KRS for admin
 @akademik_router.get("/krs", response_model=List[KRSResponse])
