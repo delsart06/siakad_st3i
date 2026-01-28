@@ -1286,6 +1286,83 @@ async def get_my_kelas(
     
     return result
 
+# Dosen PA - Get mahasiswa bimbingan
+@dosen_router.get("/mahasiswa-bimbingan")
+async def get_mahasiswa_bimbingan(
+    current_user: dict = Depends(get_current_user)
+):
+    dosen = await db.dosen.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not dosen:
+        raise HTTPException(status_code=404, detail="Data dosen tidak ditemukan")
+    
+    # Get all mahasiswa where this dosen is PA
+    mahasiswa_list = await db.mahasiswa.find(
+        {"dosen_pa_id": dosen["id"]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    result = []
+    for mhs in mahasiswa_list:
+        prodi = await db.prodi.find_one({"id": mhs["prodi_id"]}, {"_id": 0})
+        result.append({
+            **mhs,
+            "prodi_nama": prodi["nama"] if prodi else None
+        })
+    
+    return result
+
+# Dosen PA - Get KRS mahasiswa bimbingan
+@dosen_router.get("/krs-bimbingan")
+async def get_krs_bimbingan(
+    tahun_akademik_id: Optional[str] = None,
+    status: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    dosen = await db.dosen.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not dosen:
+        raise HTTPException(status_code=404, detail="Data dosen tidak ditemukan")
+    
+    # Get all mahasiswa where this dosen is PA
+    mahasiswa_list = await db.mahasiswa.find(
+        {"dosen_pa_id": dosen["id"]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    mhs_ids = [m["id"] for m in mahasiswa_list]
+    
+    # Get KRS for these mahasiswa
+    query = {"mahasiswa_id": {"$in": mhs_ids}}
+    if tahun_akademik_id:
+        query["tahun_akademik_id"] = tahun_akademik_id
+    if status:
+        query["status"] = status
+    
+    krs_list = await db.krs.find(query, {"_id": 0}).to_list(500)
+    
+    result = []
+    for krs in krs_list:
+        mhs = next((m for m in mahasiswa_list if m["id"] == krs["mahasiswa_id"]), None)
+        kelas = await db.kelas.find_one({"id": krs["kelas_id"]}, {"_id": 0})
+        
+        if kelas:
+            mk = await db.mata_kuliah.find_one({"id": kelas["mata_kuliah_id"]}, {"_id": 0})
+            
+            result.append({
+                "id": krs["id"],
+                "mahasiswa_id": krs["mahasiswa_id"],
+                "mahasiswa_nim": mhs["nim"] if mhs else None,
+                "mahasiswa_nama": mhs["nama"] if mhs else None,
+                "kelas_id": krs["kelas_id"],
+                "mata_kuliah_nama": mk["nama"] if mk else None,
+                "sks": (mk.get("sks_teori", 0) + mk.get("sks_praktik", 0)) if mk else 0,
+                "jadwal": kelas.get("jadwal"),
+                "status": krs["status"],
+                "tahun_akademik_id": krs["tahun_akademik_id"],
+                "catatan_penolakan": krs.get("catatan_penolakan"),
+            })
+    
+    return result
+
 @dosen_router.get("/kelas/{kelas_id}/mahasiswa")
 async def get_kelas_mahasiswa(
     kelas_id: str,
