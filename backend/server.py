@@ -1078,6 +1078,62 @@ async def delete_krs(
     await db.krs.delete_one({"id": item_id})
     return {"message": "KRS berhasil dihapus"}
 
+# Mahasiswa profile
+@mahasiswa_router.get("/profile")
+async def get_mahasiswa_profile(current_user: dict = Depends(get_current_user)):
+    mhs = await db.mahasiswa.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not mhs:
+        raise HTTPException(status_code=404, detail="Data mahasiswa tidak ditemukan")
+    
+    prodi = await db.prodi.find_one({"id": mhs["prodi_id"]}, {"_id": 0})
+    fakultas = None
+    if prodi:
+        fakultas = await db.fakultas.find_one({"id": prodi.get("fakultas_id")}, {"_id": 0})
+    
+    return {
+        **mhs,
+        "prodi_nama": prodi["nama"] if prodi else None,
+        "fakultas_nama": fakultas["nama"] if fakultas else None
+    }
+
+# Get available kelas for mahasiswa
+@mahasiswa_router.get("/kelas-tersedia", response_model=List[KelasResponse])
+async def get_available_kelas(
+    tahun_akademik_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    query = {}
+    
+    # If no TA specified, get active one
+    if tahun_akademik_id:
+        query["tahun_akademik_id"] = tahun_akademik_id
+    else:
+        active_ta = await db.tahun_akademik.find_one({"is_active": True}, {"_id": 0})
+        if active_ta:
+            query["tahun_akademik_id"] = active_ta["id"]
+    
+    items = await db.kelas.find(query, {"_id": 0}).to_list(500)
+    
+    result = []
+    for item in items:
+        mk = await db.mata_kuliah.find_one({"id": item["mata_kuliah_id"]}, {"_id": 0})
+        dosen = await db.dosen.find_one({"id": item["dosen_id"]}, {"_id": 0})
+        
+        # Count enrolled students
+        krs_count = await db.krs.count_documents({
+            "kelas_id": item["id"],
+            "status": {"$in": ["diajukan", "disetujui"]}
+        })
+        
+        result.append(KelasResponse(
+            **item,
+            mata_kuliah_nama=mk["nama"] if mk else None,
+            dosen_nama=dosen["nama"] if dosen else None,
+            jumlah_peserta=krs_count
+        ))
+    
+    return result
+
 # Admin approve/reject KRS
 @akademik_router.put("/krs/{item_id}/approve")
 async def approve_krs(
