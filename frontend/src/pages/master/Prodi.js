@@ -253,7 +253,7 @@ const Prodi = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="akreditasi">Akreditasi</Label>
-                <Select value={form.akreditasi} onValueChange={(value) => setForm({ ...form, akreditasi: value })}>
+                <Select value={form.akreditasi || undefined} onValueChange={(value) => setForm({ ...form, akreditasi: value })}>
                   <SelectTrigger data-testid="select-akreditasi">
                     <SelectValue placeholder="Pilih akreditasi" />
                   </SelectTrigger>
