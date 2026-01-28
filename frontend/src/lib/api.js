@@ -143,6 +143,10 @@ export const dosenPortalAPI = {
     api.get('/dosen/kelas', { params: { tahun_akademik_id: tahunAkademikId } }),
   getKelasMahasiswa: (kelasId) => api.get(`/dosen/kelas/${kelasId}/mahasiswa`),
   inputNilai: (data) => api.post('/dosen/nilai', data),
+  // Dosen PA
+  getMahasiswaBimbingan: () => api.get('/dosen/mahasiswa-bimbingan'),
+  getKRSBimbingan: (tahunAkademikId = null, status = null) =>
+    api.get('/dosen/krs-bimbingan', { params: { tahun_akademik_id: tahunAkademikId, status } }),
 };
 
 // Users
