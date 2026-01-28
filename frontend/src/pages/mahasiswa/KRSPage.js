@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { krsAPI, kelasAPI, tahunAkademikAPI } from '../../lib/api';
+import { krsAPI, tahunAkademikAPI } from '../../lib/api';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
@@ -84,7 +84,7 @@ const KRSPage = () => {
 
   const loadAvailableKelas = async (tahunAkademikId) => {
     try {
-      const response = await kelasAPI.getAll(tahunAkademikId);
+      const response = await krsAPI.getKelasTersedia(tahunAkademikId);
       setAvailableKelas(response.data);
     } catch (error) {
       console.error('Failed to load available kelas:', error);
