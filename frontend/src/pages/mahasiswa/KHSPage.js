@@ -101,7 +101,7 @@ const KHSPage = () => {
     try {
       const blob = await pdf(
         <KHSPdf 
-          mahasiswa={mahasiswa}
+          mahasiswa={khsData?.mahasiswa}
           tahunAkademik={selectedTAData}
           khsData={khsData}
         />
@@ -110,7 +110,7 @@ const KHSPage = () => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `KHS_${mahasiswa?.nim || khsData?.mahasiswa?.nim || 'unknown'}_${selectedTAData?.tahun?.replace('/', '-') || ''}_${selectedTAData?.semester || ''}.pdf`;
+      link.download = `KHS_${khsData?.mahasiswa?.nim || 'unknown'}_${selectedTAData?.tahun?.replace('/', '-') || ''}_${selectedTAData?.semester || ''}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
