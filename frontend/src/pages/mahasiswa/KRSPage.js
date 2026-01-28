@@ -53,6 +53,8 @@ const KRSPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
   const [selectedKelas, setSelectedKelas] = useState(null);
+  const [mahasiswa, setMahasiswa] = useState(null);
+  const [printing, setPrinting] = useState(false);
 
   useEffect(() => {
     loadInitialData();
