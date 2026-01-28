@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { krsAPI, tahunAkademikAPI } from '../../lib/api';
+import { krsAPI, tahunAkademikAPI, mahasiswaAPI } from '../../lib/api';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
@@ -37,9 +37,12 @@ import {
   Trash2,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  FileDown
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { pdf } from '@react-pdf/renderer';
+import KRSPdf from '../../components/pdf/KRSPdf';
 
 const KRSPage = () => {
   const [myKRS, setMyKRS] = useState([]);
