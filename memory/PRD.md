@@ -71,7 +71,10 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
   - **KRS Page** - Enrollment mata kuliah dengan summary cards, pilih kelas dialog, **Cetak PDF**
   - **KHS Page** - Hasil studi per semester dengan selector tahun akademik, **Cetak PDF**
   - **Transkrip Page** - Rekap nilai lengkap dengan cetak/download PDF
-- ✅ **Portal Dosen PA:**
+- ✅ **Portal Dosen:**
+  - **Kelas Saya** - Daftar kelas yang diampu dengan stats (Total Kelas, Mahasiswa, SKS)
+  - **Daftar Mahasiswa** - Lihat mahasiswa per kelas dengan search, filter, export CSV
+  - **Input Nilai** - Input nilai Tugas, UTS, UAS dengan auto-calculation grade A-E
   - **Validasi KRS PA** - List mahasiswa bimbingan, approve/reject KRS
 - ✅ **PDF Components:**
   - KRSPdf - PDF template untuk cetak KRS
