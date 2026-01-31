@@ -221,6 +221,8 @@ class KRSResponse(KRSBase):
     sks: int = 0
     dosen_nama: Optional[str] = None
     jadwal: Optional[str] = None
+    mahasiswa_nim: Optional[str] = None
+    mahasiswa_nama: Optional[str] = None
 
 # Nilai
 class NilaiBase(BaseModel):
