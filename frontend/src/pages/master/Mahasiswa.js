@@ -89,7 +89,7 @@ const Mahasiswa = () => {
 
   const loadDosen = async () => {
     try {
-      const response = await dosenAPI.getAll();
+      const response = await dosenMasterAPI.getAll();
       setDosenList(response.data);
     } catch (error) {
       console.error('Failed to load dosen');
