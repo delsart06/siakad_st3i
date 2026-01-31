@@ -147,15 +147,48 @@ export const dosenPortalAPI = {
   getMahasiswaBimbingan: () => api.get('/dosen/mahasiswa-bimbingan'),
   getKRSBimbingan: (tahunAkademikId = null, status = null) =>
     api.get('/dosen/krs-bimbingan', { params: { tahun_akademik_id: tahunAkademikId, status } }),
+  // Presensi
+  createPresensi: (data) => api.post('/dosen/presensi', data),
+  getPresensiList: (kelasId) => api.get(`/dosen/presensi/${kelasId}`),
+  getPresensiDetail: (presensiId) => api.get(`/dosen/presensi/${presensiId}/detail`),
+  savePresensiDetail: (presensiId, details) => api.post(`/dosen/presensi/${presensiId}/detail`, details),
+  getRekapPresensi: (kelasId) => api.get(`/dosen/presensi/${kelasId}/rekap`),
 };
 
 // Alias for dosenPortalAPI
 export const dosenAPI = dosenPortalAPI;
 
+// Jadwal Kuliah
+export const jadwalAPI = {
+  getAll: (tahunAkademikId = null, hari = null) =>
+    api.get('/akademik/jadwal', { params: { tahun_akademik_id: tahunAkademikId, hari } }),
+  create: (data) => api.post('/akademik/jadwal', data),
+  update: (id, data) => api.put(`/akademik/jadwal/${id}`, data),
+  checkConflict: (params) => api.get('/akademik/jadwal/check-conflict', { params }),
+};
+
+// Mahasiswa Jadwal & Presensi
+export const mahasiswaJadwalAPI = {
+  getMyJadwal: (tahunAkademikId = null) =>
+    api.get('/mahasiswa/jadwal', { params: { tahun_akademik_id: tahunAkademikId } }),
+  getMyPresensi: (kelasId = null) =>
+    api.get('/mahasiswa/presensi', { params: { kelas_id: kelasId } }),
+  getMyPresensiRekap: (tahunAkademikId = null) =>
+    api.get('/mahasiswa/presensi/rekap', { params: { tahun_akademik_id: tahunAkademikId } }),
+};
+
+// Password Reset
+export const passwordResetAPI = {
+  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+  verifyToken: (token) => api.get(`/auth/verify-reset-token/${token}`),
+  resetPassword: (token, newPassword) => api.post('/auth/reset-password', { token, new_password: newPassword }),
+};
+
 // Users
 export const usersAPI = {
   getAll: () => api.get('/users'),
   toggleActive: (id) => api.put(`/users/${id}/toggle-active`),
+  generateResetToken: (id) => api.post(`/users/${id}/generate-reset-token`),
 };
 
 export default api;
