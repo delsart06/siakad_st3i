@@ -41,6 +41,11 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
   - Nilai (grade input, auto-calculation A-E)
   - KHS & Transkrip (IPK calculation)
   - **Jadwal Kuliah (CRUD with conflict detection)**
+- ✅ **Keuangan APIs:**
+  - Kategori UKT (CRUD - Kelola golongan UKT)
+  - Tagihan UKT (CRUD, batch create per prodi)
+  - Pembayaran UKT (create, verify/reject)
+  - Rekap Keuangan (summary totals)
 - ✅ Dashboard Stats API
 - ✅ **Mahasiswa Portal APIs:**
   - Profile mahasiswa (with dosen_pa_nama)
@@ -86,12 +91,16 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
   - **Transkrip Page** - Rekap nilai lengkap dengan cetak/download PDF
   - **Jadwal Page** - Lihat jadwal kuliah mingguan dengan group by hari
   - **Presensi Page** - Rekap kehadiran per mata kuliah dengan warning <75%
+  - **Keuangan Page** - Lihat tagihan UKT, bayar cicilan, riwayat pembayaran
 - ✅ **Portal Dosen:**
   - **Kelas Saya** - Daftar kelas yang diampu dengan stats (Total Kelas, Mahasiswa, SKS)
   - **Daftar Mahasiswa** - Lihat mahasiswa per kelas dengan search, filter, export CSV
   - **Presensi** - Input presensi per pertemuan, rekap kehadiran mahasiswa
   - **Input Nilai** - Input nilai Tugas, UTS, UAS dengan auto-calculation grade A-E
   - **Validasi KRS PA** - List mahasiswa bimbingan, approve/reject KRS
+- ✅ **Keuangan Admin:**
+  - **Manajemen Tagihan** - CRUD tagihan UKT, batch create, filter, rekap cards
+  - **Verifikasi Pembayaran** - Approve/reject pembayaran mahasiswa
 - ✅ **Password Reset:**
   - **Lupa Password Page** - Request reset token via email
   - **Reset Password Page** - Set new password with token validation
