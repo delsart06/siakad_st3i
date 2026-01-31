@@ -237,12 +237,12 @@ const JadwalKuliah = () => {
           </Select>
         </div>
         <div className="w-48">
-          <Select value={selectedHari} onValueChange={setSelectedHari}>
+          <Select value={selectedHari || "all"} onValueChange={(v) => setSelectedHari(v === "all" ? "" : v)}>
             <SelectTrigger>
               <SelectValue placeholder="Semua Hari" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Semua Hari</SelectItem>
+              <SelectItem value="all">Semua Hari</SelectItem>
               {HARI_LIST.map((h) => (
                 <SelectItem key={h} value={h}>{h}</SelectItem>
               ))}
