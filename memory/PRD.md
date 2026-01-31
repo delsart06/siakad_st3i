@@ -77,17 +77,24 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
   - Dosen (table, search, CRUD)
 - ✅ Akademik Pages:
   - Penawaran Kelas (table, CRUD)
-  - Validasi KRS (approve/reject)
+  - Validasi KRS (approve/reject) with mahasiswa info
+  - **Jadwal Kuliah** - Grid view per hari, CRUD dengan conflict detection
 - ✅ User Management (toggle active users)
 - ✅ **Portal Mahasiswa:**
   - **KRS Page** - Enrollment mata kuliah dengan summary cards, pilih kelas dialog, **Cetak PDF**
   - **KHS Page** - Hasil studi per semester dengan selector tahun akademik, **Cetak PDF**
   - **Transkrip Page** - Rekap nilai lengkap dengan cetak/download PDF
+  - **Jadwal Page** - Lihat jadwal kuliah mingguan dengan group by hari
+  - **Presensi Page** - Rekap kehadiran per mata kuliah dengan warning <75%
 - ✅ **Portal Dosen:**
   - **Kelas Saya** - Daftar kelas yang diampu dengan stats (Total Kelas, Mahasiswa, SKS)
   - **Daftar Mahasiswa** - Lihat mahasiswa per kelas dengan search, filter, export CSV
+  - **Presensi** - Input presensi per pertemuan, rekap kehadiran mahasiswa
   - **Input Nilai** - Input nilai Tugas, UTS, UAS dengan auto-calculation grade A-E
   - **Validasi KRS PA** - List mahasiswa bimbingan, approve/reject KRS
+- ✅ **Password Reset:**
+  - **Lupa Password Page** - Request reset token via email
+  - **Reset Password Page** - Set new password with token validation
 - ✅ **PDF Components:**
   - KRSPdf - PDF template untuk cetak KRS
   - KHSPdf - PDF template untuk cetak KHS
@@ -98,20 +105,20 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
 
 ## Prioritized Backlog
 
-### P0 (Critical - Next Phase)
-1. ~~Mahasiswa Portal - KRS page for students to enroll~~ ✅ DONE
-2. ~~Mahasiswa Portal - KHS page to view semester grades~~ ✅ DONE
-3. ~~Mahasiswa Portal - Transkrip page with print/PDF~~ ✅ DONE
-4. ~~Dosen PA - Validasi KRS mahasiswa bimbingan~~ ✅ DONE
-5. ~~Cetak PDF KRS dan KHS~~ ✅ DONE
-6. ~~Dosen Portal - Input Nilai mahasiswa~~ ✅ DONE
+### P0 (Critical) - ALL DONE ✅
+1. ~~Mahasiswa Portal - KRS page for students to enroll~~ ✅
+2. ~~Mahasiswa Portal - KHS page to view semester grades~~ ✅
+3. ~~Mahasiswa Portal - Transkrip page with print/PDF~~ ✅
+4. ~~Dosen PA - Validasi KRS mahasiswa bimbingan~~ ✅
+5. ~~Cetak PDF KRS dan KHS~~ ✅
+6. ~~Dosen Portal - Input Nilai mahasiswa~~ ✅
 
-### P1 (High Priority)
-1. ~~Dosen Portal - Kelas Saya~~ ✅ DONE
-2. ~~Dosen Portal - Daftar Mahasiswa per Kelas~~ ✅ DONE
-3. Jadwal Kuliah - Schedule management with conflict detection
-4. Presensi - Attendance tracking
-5. Password reset functionality
+### P1 (High Priority) - ALL DONE ✅
+1. ~~Dosen Portal - Kelas Saya~~ ✅
+2. ~~Dosen Portal - Daftar Mahasiswa per Kelas~~ ✅
+3. ~~Jadwal Kuliah - Schedule management with conflict detection~~ ✅
+4. ~~Presensi - Attendance tracking~~ ✅
+5. ~~Password reset functionality~~ ✅
 
 ### P2 (Medium Priority)
 1. Keuangan Module - UKT/SPP integration
