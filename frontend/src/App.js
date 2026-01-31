@@ -18,6 +18,9 @@ import KRSPage from './pages/mahasiswa/KRSPage';
 import KHSPage from './pages/mahasiswa/KHSPage';
 import TranskripPage from './pages/mahasiswa/TranskripPage';
 import ValidasiKRSDosenPA from './pages/dosen/ValidasiKRSDosenPA';
+import KelasSaya from './pages/dosen/KelasSaya';
+import InputNilai from './pages/dosen/InputNilai';
+import DaftarMahasiswa from './pages/dosen/DaftarMahasiswa';
 import './App.css';
 
 function App() {
@@ -54,7 +57,10 @@ function App() {
             <Route path="/mahasiswa/transkrip" element={<TranskripPage />} />
             
             {/* Dosen Portal */}
-            <Route path="/dosen/validasi-krs" element={<ValidasiKRSDosenPA />} />
+            <Route path="/dosen/kelas" element={<KelasSaya />} />
+            <Route path="/dosen/validasi-krs-pa" element={<ValidasiKRSDosenPA />} />
+            <Route path="/dosen/nilai" element={<InputNilai />} />
+            <Route path="/dosen/mahasiswa" element={<DaftarMahasiswa />} />
           </Route>
           
           {/* Catch all */}
