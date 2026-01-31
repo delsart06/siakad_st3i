@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 
 class PortalMahasiswaAPITester:
-    def __init__(self, base_url="https://kampus-digital-5.preview.emergentagent.com"):
+    def __init__(self, base_url="https://siakad-finance.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.mahasiswa_token = None
