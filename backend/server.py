@@ -1252,6 +1252,7 @@ async def get_all_krs(
     result = []
     for item in items:
         kelas = await db.kelas.find_one({"id": item["kelas_id"]}, {"_id": 0})
+        mahasiswa = await db.mahasiswa.find_one({"id": item["mahasiswa_id"]}, {"_id": 0})
         if kelas:
             mk = await db.mata_kuliah.find_one({"id": kelas["mata_kuliah_id"]}, {"_id": 0})
             dosen = await db.dosen.find_one({"id": kelas["dosen_id"]}, {"_id": 0})
@@ -1259,9 +1260,12 @@ async def get_all_krs(
             result.append(KRSResponse(
                 **item,
                 mata_kuliah_nama=mk["nama"] if mk else None,
+                kode_mk=mk["kode"] if mk else None,
                 sks=(mk.get("sks_teori", 0) + mk.get("sks_praktik", 0)) if mk else 0,
                 dosen_nama=dosen["nama"] if dosen else None,
-                jadwal=kelas.get("jadwal")
+                jadwal=kelas.get("jadwal"),
+                mahasiswa_nim=mahasiswa["nim"] if mahasiswa else None,
+                mahasiswa_nama=mahasiswa["nama"] if mahasiswa else None
             ))
     
     return result
