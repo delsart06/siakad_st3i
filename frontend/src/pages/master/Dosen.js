@@ -58,7 +58,7 @@ const Dosen = () => {
 
   const loadData = async () => {
     try {
-      const response = await dosenAPI.getAll();
+      const response = await dosenMasterAPI.getAll();
       setData(response.data);
     } catch (error) {
       toast.error('Gagal memuat data');
@@ -114,10 +114,10 @@ const Dosen = () => {
     try {
       if (editingItem) {
         const { password, ...updateData } = form;
-        await dosenAPI.update(editingItem.id, updateData);
+        await dosenMasterAPI.update(editingItem.id, updateData);
         toast.success('Data berhasil diperbarui');
       } else {
-        await dosenAPI.create(form);
+        await dosenMasterAPI.create(form);
         toast.success('Data berhasil ditambahkan');
       }
       setDialogOpen(false);
@@ -133,7 +133,7 @@ const Dosen = () => {
     if (!window.confirm(`Hapus dosen ${item.nama}?`)) return;
     
     try {
-      await dosenAPI.delete(item.id);
+      await dosenMasterAPI.delete(item.id);
       toast.success('Data berhasil dihapus');
       loadData();
     } catch (error) {
