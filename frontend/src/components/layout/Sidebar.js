@@ -60,6 +60,7 @@ const Sidebar = () => {
       icon: ClipboardList,
       children: [
         { path: '/akademik/kelas', label: 'Penawaran Kelas', icon: BookOpen },
+        { path: '/akademik/jadwal', label: 'Jadwal Kuliah', icon: Calendar },
         { path: '/akademik/krs', label: 'Validasi KRS', icon: ClipboardList },
       ],
     },
@@ -67,6 +68,8 @@ const Sidebar = () => {
 
   const mahasiswaMenus = [
     { path: '/mahasiswa/krs', label: 'KRS', icon: ClipboardList },
+    { path: '/mahasiswa/jadwal', label: 'Jadwal Kuliah', icon: Calendar },
+    { path: '/mahasiswa/presensi', label: 'Presensi', icon: ClipboardList },
     { path: '/mahasiswa/khs', label: 'KHS', icon: FileText },
     { path: '/mahasiswa/transkrip', label: 'Transkrip', icon: FileText },
   ];
@@ -74,6 +77,7 @@ const Sidebar = () => {
   const dosenMenus = [
     { path: '/dosen/kelas', label: 'Kelas Saya', icon: BookOpen },
     { path: '/dosen/mahasiswa', label: 'Daftar Mahasiswa', icon: Users },
+    { path: '/dosen/presensi', label: 'Presensi', icon: ClipboardList },
     { path: '/dosen/nilai', label: 'Input Nilai', icon: ClipboardList },
     { path: '/dosen/validasi-krs-pa', label: 'Validasi KRS PA', icon: ClipboardList },
   ];
