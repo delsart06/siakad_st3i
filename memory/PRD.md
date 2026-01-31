@@ -142,8 +142,11 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
 5. ~~Implement Lecturer (Dosen) grade input interface~~ ✅
 6. ~~Add Dosen Kelas Saya page~~ ✅
 7. ~~Add Dosen Daftar Mahasiswa per Kelas page~~ ✅
-8. Add Jadwal Kuliah management
-9. Add Presensi mahasiswa
+8. ~~Add Jadwal Kuliah management with conflict detection~~ ✅
+9. ~~Add Presensi mahasiswa (Dosen & Mahasiswa view)~~ ✅
+10. ~~Add Password Reset functionality~~ ✅
+11. Add Modul Keuangan (UKT/SPP)
+12. Add Bulk import Excel for Mahasiswa/Dosen
 
 ---
 
