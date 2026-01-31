@@ -329,6 +329,86 @@ class PasswordResetResponse(BaseModel):
     message: str
     reset_token: Optional[str] = None  # Only for admin-generated tokens
 
+# ==================== KEUANGAN (FINANCE) MODELS ====================
+
+# Kategori UKT
+class KategoriUKTBase(BaseModel):
+    kode: str  # UKT-1, UKT-2, etc.
+    nama: str  # "UKT Kategori 1", etc.
+    nominal: float  # Amount in IDR
+    deskripsi: Optional[str] = None
+
+class KategoriUKTCreate(KategoriUKTBase):
+    pass
+
+class KategoriUKTResponse(KategoriUKTBase):
+    id: str
+
+# Tagihan UKT
+class TagihanUKTBase(BaseModel):
+    mahasiswa_id: str
+    tahun_akademik_id: str
+    kategori_ukt_id: str
+    nominal: float
+    status: str = "belum_bayar"  # belum_bayar, cicilan, lunas
+    jatuh_tempo: str  # YYYY-MM-DD
+
+class TagihanUKTCreate(BaseModel):
+    mahasiswa_id: str
+    tahun_akademik_id: str
+    kategori_ukt_id: str
+    jatuh_tempo: str
+
+class TagihanUKTBatchCreate(BaseModel):
+    tahun_akademik_id: str
+    prodi_id: Optional[str] = None  # Optional filter by prodi
+    jatuh_tempo: str
+
+class TagihanUKTResponse(TagihanUKTBase):
+    id: str
+    mahasiswa_nim: Optional[str] = None
+    mahasiswa_nama: Optional[str] = None
+    prodi_nama: Optional[str] = None
+    tahun_akademik_label: Optional[str] = None
+    kategori_nama: Optional[str] = None
+    total_dibayar: float = 0
+    sisa_tagihan: float = 0
+    created_at: Optional[str] = None
+
+# Pembayaran UKT
+class PembayaranUKTBase(BaseModel):
+    tagihan_id: str
+    nominal: float
+    metode_pembayaran: str  # transfer, tunai, va_bank
+    bukti_pembayaran: Optional[str] = None
+    keterangan: Optional[str] = None
+
+class PembayaranUKTCreate(PembayaranUKTBase):
+    pass
+
+class PembayaranUKTVerify(BaseModel):
+    status: str  # verified, rejected
+    catatan: Optional[str] = None
+
+class PembayaranUKTResponse(PembayaranUKTBase):
+    id: str
+    status: str = "pending"  # pending, verified, rejected
+    verified_by: Optional[str] = None
+    verified_at: Optional[str] = None
+    catatan_verifikasi: Optional[str] = None
+    created_at: Optional[str] = None
+    mahasiswa_nama: Optional[str] = None
+    mahasiswa_nim: Optional[str] = None
+
+# Rekap Keuangan
+class RekapKeuanganResponse(BaseModel):
+    total_tagihan: float
+    total_terbayar: float
+    total_belum_bayar: float
+    jumlah_mahasiswa_lunas: int
+    jumlah_mahasiswa_cicilan: int
+    jumlah_mahasiswa_belum_bayar: int
+
 # Dashboard Stats
 class DashboardStats(BaseModel):
     total_mahasiswa: int = 0
