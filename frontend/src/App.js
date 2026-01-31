@@ -26,6 +26,9 @@ import KelasSaya from './pages/dosen/KelasSaya';
 import InputNilai from './pages/dosen/InputNilai';
 import DaftarMahasiswa from './pages/dosen/DaftarMahasiswa';
 import Presensi from './pages/dosen/Presensi';
+import ManajemenTagihan from './pages/keuangan/ManajemenTagihan';
+import VerifikasiPembayaran from './pages/keuangan/VerifikasiPembayaran';
+import KeuanganPage from './pages/mahasiswa/KeuanganPage';
 import './App.css';
 
 function App() {
@@ -58,12 +61,17 @@ function App() {
             {/* User Management */}
             <Route path="/users" element={<UserManagement />} />
             
+            {/* Keuangan (Admin) */}
+            <Route path="/keuangan/tagihan" element={<ManajemenTagihan />} />
+            <Route path="/keuangan/pembayaran" element={<VerifikasiPembayaran />} />
+            
             {/* Mahasiswa Portal */}
             <Route path="/mahasiswa/krs" element={<KRSPage />} />
             <Route path="/mahasiswa/khs" element={<KHSPage />} />
             <Route path="/mahasiswa/transkrip" element={<TranskripPage />} />
             <Route path="/mahasiswa/jadwal" element={<JadwalPage />} />
             <Route path="/mahasiswa/presensi" element={<PresensiPage />} />
+            <Route path="/mahasiswa/keuangan" element={<KeuanganPage />} />
             
             {/* Dosen Portal */}
             <Route path="/dosen/kelas" element={<KelasSaya />} />

@@ -191,4 +191,35 @@ export const usersAPI = {
   generateResetToken: (id) => api.post(`/users/${id}/generate-reset-token`),
 };
 
+// Keuangan (Admin)
+export const keuanganAPI = {
+  // Kategori UKT
+  getKategoriUKT: () => api.get('/keuangan/kategori-ukt'),
+  createKategoriUKT: (data) => api.post('/keuangan/kategori-ukt', data),
+  updateKategoriUKT: (id, data) => api.put(`/keuangan/kategori-ukt/${id}`, data),
+  deleteKategoriUKT: (id) => api.delete(`/keuangan/kategori-ukt/${id}`),
+  // Tagihan
+  getTagihan: (tahunAkademikId = null, status = null, prodiId = null) =>
+    api.get('/keuangan/tagihan', { params: { tahun_akademik_id: tahunAkademikId, status, prodi_id: prodiId } }),
+  createTagihan: (data) => api.post('/keuangan/tagihan', data),
+  createTagihanBatch: (data) => api.post('/keuangan/tagihan/batch', data),
+  deleteTagihan: (id) => api.delete(`/keuangan/tagihan/${id}`),
+  // Pembayaran
+  getPembayaran: (tahunAkademikId = null, status = null) =>
+    api.get('/keuangan/pembayaran', { params: { tahun_akademik_id: tahunAkademikId, status } }),
+  verifyPembayaran: (id, data) => api.put(`/keuangan/pembayaran/${id}/verify`, data),
+  // Rekap
+  getRekap: (tahunAkademikId = null) =>
+    api.get('/keuangan/rekap', { params: { tahun_akademik_id: tahunAkademikId } }),
+};
+
+// Mahasiswa Keuangan
+export const mahasiswaKeuanganAPI = {
+  getMyTagihan: (tahunAkademikId = null) =>
+    api.get('/mahasiswa/keuangan/tagihan', { params: { tahun_akademik_id: tahunAkademikId } }),
+  getMyPembayaran: (tagihanId = null) =>
+    api.get('/mahasiswa/keuangan/pembayaran', { params: { tagihan_id: tagihanId } }),
+  createPembayaran: (data) => api.post('/mahasiswa/keuangan/pembayaran', data),
+};
+
 export default api;
