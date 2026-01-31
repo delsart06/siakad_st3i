@@ -93,6 +93,16 @@ const Login = () => {
                 </button>
               </div>
             </div>
+            <div className="flex items-center justify-between">
+              <div></div>
+              <a 
+                href="/forgot-password" 
+                className="text-sm text-[#1e1b4b] hover:underline"
+                data-testid="forgot-password-link"
+              >
+                Lupa Password?
+              </a>
+            </div>
             <Button 
               type="submit" 
               className="w-full h-11 bg-[#1e1b4b] hover:bg-[#312e81] text-white font-medium"
