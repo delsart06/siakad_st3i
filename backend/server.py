@@ -2489,6 +2489,542 @@ async def admin_generate_reset_token(
         "expires_in": "24 jam"
     }
 
+# ==================== KEUANGAN (FINANCE) ENDPOINTS ====================
+
+# ----- Kategori UKT -----
+@keuangan_router.get("/kategori-ukt", response_model=List[KategoriUKTResponse])
+async def get_kategori_ukt(current_user: dict = Depends(get_current_user)):
+    items = await db.kategori_ukt.find({}, {"_id": 0}).sort("nominal", 1).to_list(100)
+    return items
+
+@keuangan_router.post("/kategori-ukt", response_model=KategoriUKTResponse)
+async def create_kategori_ukt(
+    data: KategoriUKTCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    existing = await db.kategori_ukt.find_one({"kode": data.kode})
+    if existing:
+        raise HTTPException(status_code=400, detail="Kode kategori sudah ada")
+    
+    doc = {
+        "id": str(uuid.uuid4()),
+        **data.dict(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.kategori_ukt.insert_one(doc)
+    return KategoriUKTResponse(**doc)
+
+@keuangan_router.put("/kategori-ukt/{item_id}", response_model=KategoriUKTResponse)
+async def update_kategori_ukt(
+    item_id: str,
+    data: KategoriUKTCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    existing = await db.kategori_ukt.find_one({"id": item_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Kategori tidak ditemukan")
+    
+    await db.kategori_ukt.update_one(
+        {"id": item_id},
+        {"$set": {**data.dict(), "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    updated = await db.kategori_ukt.find_one({"id": item_id}, {"_id": 0})
+    return KategoriUKTResponse(**updated)
+
+@keuangan_router.delete("/kategori-ukt/{item_id}")
+async def delete_kategori_ukt(
+    item_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    # Check if used in tagihan
+    used = await db.tagihan_ukt.find_one({"kategori_ukt_id": item_id})
+    if used:
+        raise HTTPException(status_code=400, detail="Kategori masih digunakan dalam tagihan")
+    
+    await db.kategori_ukt.delete_one({"id": item_id})
+    return {"message": "Kategori UKT berhasil dihapus"}
+
+# ----- Tagihan UKT -----
+@keuangan_router.get("/tagihan", response_model=List[TagihanUKTResponse])
+async def get_all_tagihan(
+    tahun_akademik_id: Optional[str] = None,
+    status: Optional[str] = None,
+    prodi_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    # Build query
+    pipeline = []
+    match_stage = {}
+    
+    if tahun_akademik_id:
+        match_stage["tahun_akademik_id"] = tahun_akademik_id
+    if status:
+        match_stage["status"] = status
+    
+    if match_stage:
+        pipeline.append({"$match": match_stage})
+    
+    # Get tagihan
+    items = await db.tagihan_ukt.find(match_stage if match_stage else {}, {"_id": 0}).to_list(1000)
+    
+    result = []
+    for item in items:
+        mhs = await db.mahasiswa.find_one({"id": item["mahasiswa_id"]}, {"_id": 0})
+        
+        # Filter by prodi if specified
+        if prodi_id and mhs and mhs.get("prodi_id") != prodi_id:
+            continue
+        
+        ta = await db.tahun_akademik.find_one({"id": item["tahun_akademik_id"]}, {"_id": 0})
+        kategori = await db.kategori_ukt.find_one({"id": item["kategori_ukt_id"]}, {"_id": 0})
+        prodi = await db.prodi.find_one({"id": mhs.get("prodi_id")}, {"_id": 0}) if mhs else None
+        
+        # Calculate total paid
+        pembayaran = await db.pembayaran_ukt.find(
+            {"tagihan_id": item["id"], "status": "verified"},
+            {"_id": 0}
+        ).to_list(100)
+        total_dibayar = sum(p["nominal"] for p in pembayaran)
+        
+        result.append(TagihanUKTResponse(
+            **item,
+            mahasiswa_nim=mhs["nim"] if mhs else None,
+            mahasiswa_nama=mhs["nama"] if mhs else None,
+            prodi_nama=prodi["nama"] if prodi else None,
+            tahun_akademik_label=f"{ta['tahun']} - {ta['semester']}" if ta else None,
+            kategori_nama=kategori["nama"] if kategori else None,
+            total_dibayar=total_dibayar,
+            sisa_tagihan=item["nominal"] - total_dibayar
+        ))
+    
+    return result
+
+@keuangan_router.post("/tagihan", response_model=TagihanUKTResponse)
+async def create_tagihan(
+    data: TagihanUKTCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    # Check if tagihan already exists for this mahasiswa and tahun akademik
+    existing = await db.tagihan_ukt.find_one({
+        "mahasiswa_id": data.mahasiswa_id,
+        "tahun_akademik_id": data.tahun_akademik_id
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Tagihan untuk mahasiswa ini sudah ada")
+    
+    # Get kategori for nominal
+    kategori = await db.kategori_ukt.find_one({"id": data.kategori_ukt_id}, {"_id": 0})
+    if not kategori:
+        raise HTTPException(status_code=404, detail="Kategori UKT tidak ditemukan")
+    
+    doc = {
+        "id": str(uuid.uuid4()),
+        "mahasiswa_id": data.mahasiswa_id,
+        "tahun_akademik_id": data.tahun_akademik_id,
+        "kategori_ukt_id": data.kategori_ukt_id,
+        "nominal": kategori["nominal"],
+        "status": "belum_bayar",
+        "jatuh_tempo": data.jatuh_tempo,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.tagihan_ukt.insert_one(doc)
+    
+    mhs = await db.mahasiswa.find_one({"id": data.mahasiswa_id}, {"_id": 0})
+    ta = await db.tahun_akademik.find_one({"id": data.tahun_akademik_id}, {"_id": 0})
+    prodi = await db.prodi.find_one({"id": mhs.get("prodi_id")}, {"_id": 0}) if mhs else None
+    
+    return TagihanUKTResponse(
+        **doc,
+        mahasiswa_nim=mhs["nim"] if mhs else None,
+        mahasiswa_nama=mhs["nama"] if mhs else None,
+        prodi_nama=prodi["nama"] if prodi else None,
+        tahun_akademik_label=f"{ta['tahun']} - {ta['semester']}" if ta else None,
+        kategori_nama=kategori["nama"],
+        total_dibayar=0,
+        sisa_tagihan=kategori["nominal"]
+    )
+
+@keuangan_router.post("/tagihan/batch")
+async def create_tagihan_batch(
+    data: TagihanUKTBatchCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    # Get all active mahasiswa
+    mhs_query = {"status": "aktif"}
+    if data.prodi_id:
+        mhs_query["prodi_id"] = data.prodi_id
+    
+    mahasiswa_list = await db.mahasiswa.find(mhs_query, {"_id": 0}).to_list(5000)
+    
+    created_count = 0
+    skipped_count = 0
+    
+    for mhs in mahasiswa_list:
+        # Check if tagihan already exists
+        existing = await db.tagihan_ukt.find_one({
+            "mahasiswa_id": mhs["id"],
+            "tahun_akademik_id": data.tahun_akademik_id
+        })
+        
+        if existing:
+            skipped_count += 1
+            continue
+        
+        # Get mahasiswa's kategori UKT (default to first if not set)
+        kategori_id = mhs.get("kategori_ukt_id")
+        if not kategori_id:
+            # Get default kategori (first one)
+            default_kat = await db.kategori_ukt.find_one({}, {"_id": 0}, sort=[("nominal", 1)])
+            if default_kat:
+                kategori_id = default_kat["id"]
+        
+        if not kategori_id:
+            continue
+        
+        kategori = await db.kategori_ukt.find_one({"id": kategori_id}, {"_id": 0})
+        if not kategori:
+            continue
+        
+        doc = {
+            "id": str(uuid.uuid4()),
+            "mahasiswa_id": mhs["id"],
+            "tahun_akademik_id": data.tahun_akademik_id,
+            "kategori_ukt_id": kategori_id,
+            "nominal": kategori["nominal"],
+            "status": "belum_bayar",
+            "jatuh_tempo": data.jatuh_tempo,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.tagihan_ukt.insert_one(doc)
+        created_count += 1
+    
+    return {
+        "message": f"Tagihan batch berhasil dibuat",
+        "created": created_count,
+        "skipped": skipped_count,
+        "total_mahasiswa": len(mahasiswa_list)
+    }
+
+@keuangan_router.put("/tagihan/{item_id}/kategori")
+async def update_tagihan_kategori(
+    item_id: str,
+    kategori_ukt_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    tagihan = await db.tagihan_ukt.find_one({"id": item_id}, {"_id": 0})
+    if not tagihan:
+        raise HTTPException(status_code=404, detail="Tagihan tidak ditemukan")
+    
+    kategori = await db.kategori_ukt.find_one({"id": kategori_ukt_id}, {"_id": 0})
+    if not kategori:
+        raise HTTPException(status_code=404, detail="Kategori tidak ditemukan")
+    
+    # Calculate total paid
+    pembayaran = await db.pembayaran_ukt.find(
+        {"tagihan_id": item_id, "status": "verified"},
+        {"_id": 0}
+    ).to_list(100)
+    total_dibayar = sum(p["nominal"] for p in pembayaran)
+    
+    # Update status based on payment
+    new_status = "belum_bayar"
+    if total_dibayar >= kategori["nominal"]:
+        new_status = "lunas"
+    elif total_dibayar > 0:
+        new_status = "cicilan"
+    
+    await db.tagihan_ukt.update_one(
+        {"id": item_id},
+        {"$set": {
+            "kategori_ukt_id": kategori_ukt_id,
+            "nominal": kategori["nominal"],
+            "status": new_status,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": "Kategori tagihan berhasil diubah"}
+
+@keuangan_router.delete("/tagihan/{item_id}")
+async def delete_tagihan(
+    item_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    # Check if has payments
+    payments = await db.pembayaran_ukt.find_one({"tagihan_id": item_id})
+    if payments:
+        raise HTTPException(status_code=400, detail="Tagihan sudah memiliki pembayaran, tidak bisa dihapus")
+    
+    await db.tagihan_ukt.delete_one({"id": item_id})
+    return {"message": "Tagihan berhasil dihapus"}
+
+# ----- Pembayaran UKT -----
+@keuangan_router.get("/pembayaran", response_model=List[PembayaranUKTResponse])
+async def get_all_pembayaran(
+    status: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    query = {}
+    if status:
+        query["status"] = status
+    
+    items = await db.pembayaran_ukt.find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
+    
+    result = []
+    for item in items:
+        tagihan = await db.tagihan_ukt.find_one({"id": item["tagihan_id"]}, {"_id": 0})
+        mhs = None
+        if tagihan:
+            mhs = await db.mahasiswa.find_one({"id": tagihan["mahasiswa_id"]}, {"_id": 0})
+        
+        result.append(PembayaranUKTResponse(
+            **item,
+            mahasiswa_nama=mhs["nama"] if mhs else None,
+            mahasiswa_nim=mhs["nim"] if mhs else None
+        ))
+    
+    return result
+
+@keuangan_router.post("/pembayaran", response_model=PembayaranUKTResponse)
+async def create_pembayaran(
+    data: PembayaranUKTCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    tagihan = await db.tagihan_ukt.find_one({"id": data.tagihan_id}, {"_id": 0})
+    if not tagihan:
+        raise HTTPException(status_code=404, detail="Tagihan tidak ditemukan")
+    
+    # Check if user is admin or owner
+    if current_user["role"] != "admin":
+        mhs = await db.mahasiswa.find_one({"user_id": current_user["id"]}, {"_id": 0})
+        if not mhs or mhs["id"] != tagihan["mahasiswa_id"]:
+            raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    doc = {
+        "id": str(uuid.uuid4()),
+        **data.dict(),
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.pembayaran_ukt.insert_one(doc)
+    
+    mhs = await db.mahasiswa.find_one({"id": tagihan["mahasiswa_id"]}, {"_id": 0})
+    
+    return PembayaranUKTResponse(
+        **doc,
+        mahasiswa_nama=mhs["nama"] if mhs else None,
+        mahasiswa_nim=mhs["nim"] if mhs else None
+    )
+
+@keuangan_router.put("/pembayaran/{item_id}/verify")
+async def verify_pembayaran(
+    item_id: str,
+    data: PembayaranUKTVerify,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    pembayaran = await db.pembayaran_ukt.find_one({"id": item_id}, {"_id": 0})
+    if not pembayaran:
+        raise HTTPException(status_code=404, detail="Pembayaran tidak ditemukan")
+    
+    await db.pembayaran_ukt.update_one(
+        {"id": item_id},
+        {"$set": {
+            "status": data.status,
+            "catatan_verifikasi": data.catatan,
+            "verified_by": current_user["id"],
+            "verified_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # If verified, update tagihan status
+    if data.status == "verified":
+        tagihan = await db.tagihan_ukt.find_one({"id": pembayaran["tagihan_id"]}, {"_id": 0})
+        if tagihan:
+            # Calculate total verified payments
+            pembayaran_list = await db.pembayaran_ukt.find(
+                {"tagihan_id": tagihan["id"], "status": "verified"},
+                {"_id": 0}
+            ).to_list(100)
+            total_dibayar = sum(p["nominal"] for p in pembayaran_list) + pembayaran["nominal"]
+            
+            # Update status
+            new_status = "cicilan"
+            if total_dibayar >= tagihan["nominal"]:
+                new_status = "lunas"
+            
+            await db.tagihan_ukt.update_one(
+                {"id": tagihan["id"]},
+                {"$set": {"status": new_status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+    
+    return {"message": f"Pembayaran berhasil di{data.status}"}
+
+# ----- Mahasiswa Keuangan -----
+@mahasiswa_router.get("/keuangan/tagihan")
+async def get_my_tagihan(
+    tahun_akademik_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    mhs = await db.mahasiswa.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not mhs:
+        raise HTTPException(status_code=404, detail="Data mahasiswa tidak ditemukan")
+    
+    query = {"mahasiswa_id": mhs["id"]}
+    if tahun_akademik_id:
+        query["tahun_akademik_id"] = tahun_akademik_id
+    
+    items = await db.tagihan_ukt.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    
+    result = []
+    for item in items:
+        ta = await db.tahun_akademik.find_one({"id": item["tahun_akademik_id"]}, {"_id": 0})
+        kategori = await db.kategori_ukt.find_one({"id": item["kategori_ukt_id"]}, {"_id": 0})
+        
+        # Calculate total paid
+        pembayaran = await db.pembayaran_ukt.find(
+            {"tagihan_id": item["id"], "status": "verified"},
+            {"_id": 0}
+        ).to_list(100)
+        total_dibayar = sum(p["nominal"] for p in pembayaran)
+        
+        result.append({
+            **item,
+            "tahun_akademik_label": f"{ta['tahun']} - {ta['semester']}" if ta else None,
+            "kategori_nama": kategori["nama"] if kategori else None,
+            "total_dibayar": total_dibayar,
+            "sisa_tagihan": item["nominal"] - total_dibayar
+        })
+    
+    return result
+
+@mahasiswa_router.get("/keuangan/pembayaran")
+async def get_my_pembayaran(
+    tagihan_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    mhs = await db.mahasiswa.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not mhs:
+        raise HTTPException(status_code=404, detail="Data mahasiswa tidak ditemukan")
+    
+    # Get my tagihan IDs
+    tagihan_query = {"mahasiswa_id": mhs["id"]}
+    if tagihan_id:
+        tagihan_query["id"] = tagihan_id
+    
+    tagihan_list = await db.tagihan_ukt.find(tagihan_query, {"_id": 0}).to_list(100)
+    tagihan_ids = [t["id"] for t in tagihan_list]
+    
+    items = await db.pembayaran_ukt.find(
+        {"tagihan_id": {"$in": tagihan_ids}},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(200)
+    
+    return items
+
+@mahasiswa_router.post("/keuangan/pembayaran", response_model=PembayaranUKTResponse)
+async def create_my_pembayaran(
+    data: PembayaranUKTCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    mhs = await db.mahasiswa.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not mhs:
+        raise HTTPException(status_code=404, detail="Data mahasiswa tidak ditemukan")
+    
+    # Verify tagihan belongs to this mahasiswa
+    tagihan = await db.tagihan_ukt.find_one({
+        "id": data.tagihan_id,
+        "mahasiswa_id": mhs["id"]
+    }, {"_id": 0})
+    
+    if not tagihan:
+        raise HTTPException(status_code=404, detail="Tagihan tidak ditemukan")
+    
+    doc = {
+        "id": str(uuid.uuid4()),
+        **data.dict(),
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.pembayaran_ukt.insert_one(doc)
+    
+    return PembayaranUKTResponse(
+        **doc,
+        mahasiswa_nama=mhs["nama"],
+        mahasiswa_nim=mhs["nim"]
+    )
+
+# ----- Rekap Keuangan -----
+@keuangan_router.get("/rekap", response_model=RekapKeuanganResponse)
+async def get_rekap_keuangan(
+    tahun_akademik_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    query = {}
+    if tahun_akademik_id:
+        query["tahun_akademik_id"] = tahun_akademik_id
+    
+    tagihan_list = await db.tagihan_ukt.find(query, {"_id": 0}).to_list(10000)
+    
+    total_tagihan = sum(t["nominal"] for t in tagihan_list)
+    
+    # Calculate total verified payments
+    tagihan_ids = [t["id"] for t in tagihan_list]
+    pembayaran_list = await db.pembayaran_ukt.find(
+        {"tagihan_id": {"$in": tagihan_ids}, "status": "verified"},
+        {"_id": 0}
+    ).to_list(50000)
+    total_terbayar = sum(p["nominal"] for p in pembayaran_list)
+    
+    lunas_count = len([t for t in tagihan_list if t["status"] == "lunas"])
+    cicilan_count = len([t for t in tagihan_list if t["status"] == "cicilan"])
+    belum_bayar_count = len([t for t in tagihan_list if t["status"] == "belum_bayar"])
+    
+    return RekapKeuanganResponse(
+        total_tagihan=total_tagihan,
+        total_terbayar=total_terbayar,
+        total_belum_bayar=total_tagihan - total_terbayar,
+        jumlah_mahasiswa_lunas=lunas_count,
+        jumlah_mahasiswa_cicilan=cicilan_count,
+        jumlah_mahasiswa_belum_bayar=belum_bayar_count
+    )
+
 # Include routers
 api_router.include_router(auth_router)
 api_router.include_router(master_router)
