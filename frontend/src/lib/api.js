@@ -149,6 +149,9 @@ export const dosenPortalAPI = {
     api.get('/dosen/krs-bimbingan', { params: { tahun_akademik_id: tahunAkademikId, status } }),
 };
 
+// Alias for dosenPortalAPI
+export const dosenAPI = dosenPortalAPI;
+
 // Users
 export const usersAPI = {
   getAll: () => api.get('/users'),
