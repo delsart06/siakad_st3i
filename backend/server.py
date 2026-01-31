@@ -246,6 +246,89 @@ class NilaiResponse(NilaiBase):
     mahasiswa_nama: Optional[str] = None
     nim: Optional[str] = None
 
+# Jadwal Detail untuk conflict detection
+class JadwalDetail(BaseModel):
+    hari: str  # Senin, Selasa, etc.
+    jam_mulai: str  # HH:MM format
+    jam_selesai: str  # HH:MM format
+    ruangan: Optional[str] = None
+
+class KelasJadwalCreate(BaseModel):
+    kode_kelas: str
+    mata_kuliah_id: str
+    dosen_id: str
+    tahun_akademik_id: str
+    kuota: int = 40
+    hari: str
+    jam_mulai: str
+    jam_selesai: str
+    ruangan: Optional[str] = None
+
+class KelasJadwalResponse(BaseModel):
+    id: str
+    kode_kelas: str
+    mata_kuliah_id: str
+    mata_kuliah_nama: Optional[str] = None
+    dosen_id: str
+    dosen_nama: Optional[str] = None
+    tahun_akademik_id: str
+    kuota: int = 40
+    hari: str
+    jam_mulai: str
+    jam_selesai: str
+    ruangan: Optional[str] = None
+    jumlah_peserta: int = 0
+
+# Presensi (Attendance)
+class PresensiBase(BaseModel):
+    kelas_id: str
+    pertemuan_ke: int
+    tanggal: str  # YYYY-MM-DD
+
+class PresensiCreate(PresensiBase):
+    pass
+
+class PresensiDetailCreate(BaseModel):
+    mahasiswa_id: str
+    status: str = "hadir"  # hadir, izin, sakit, alpha
+    keterangan: Optional[str] = None
+
+class PresensiResponse(PresensiBase):
+    id: str
+    created_at: Optional[str] = None
+
+class PresensiDetailResponse(BaseModel):
+    id: str
+    presensi_id: str
+    mahasiswa_id: str
+    mahasiswa_nama: Optional[str] = None
+    mahasiswa_nim: Optional[str] = None
+    status: str
+    keterangan: Optional[str] = None
+
+class RekapPresensiResponse(BaseModel):
+    mahasiswa_id: str
+    mahasiswa_nama: str
+    mahasiswa_nim: str
+    hadir: int = 0
+    izin: int = 0
+    sakit: int = 0
+    alpha: int = 0
+    total_pertemuan: int = 0
+    persentase_kehadiran: float = 0.0
+
+# Password Reset
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+class PasswordResetVerify(BaseModel):
+    token: str
+    new_password: str
+
+class PasswordResetResponse(BaseModel):
+    message: str
+    reset_token: Optional[str] = None  # Only for admin-generated tokens
+
 # Dashboard Stats
 class DashboardStats(BaseModel):
     total_mahasiswa: int = 0
