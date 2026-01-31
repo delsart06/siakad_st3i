@@ -73,8 +73,9 @@ const Sidebar = () => {
 
   const dosenMenus = [
     { path: '/dosen/kelas', label: 'Kelas Saya', icon: BookOpen },
-    { path: '/dosen/validasi-krs', label: 'Validasi KRS PA', icon: ClipboardList },
+    { path: '/dosen/mahasiswa', label: 'Daftar Mahasiswa', icon: Users },
     { path: '/dosen/nilai', label: 'Input Nilai', icon: ClipboardList },
+    { path: '/dosen/validasi-krs-pa', label: 'Validasi KRS PA', icon: ClipboardList },
   ];
 
   return (
