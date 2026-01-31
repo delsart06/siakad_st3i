@@ -77,7 +77,8 @@ const VerifikasiPembayaran = () => {
   const loadPembayaran = async () => {
     setLoading(true);
     try {
-      const res = await keuanganAPI.getPembayaran(filterTahunAkademik, filterStatus || null);
+      const statusParam = filterStatus === 'all' ? null : filterStatus || null;
+      const res = await keuanganAPI.getPembayaran(filterTahunAkademik, statusParam);
       setPembayaran(res.data);
     } catch (error) {
       toast.error('Gagal memuat data pembayaran');

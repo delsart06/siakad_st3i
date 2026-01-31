@@ -115,8 +115,10 @@ const ManajemenTagihan = () => {
   const loadTagihan = async () => {
     setLoading(true);
     try {
+      const statusParam = filterStatus === 'all' ? null : filterStatus || null;
+      const prodiParam = filterProdi === 'all' ? null : filterProdi || null;
       const [tagihanRes, rekapRes] = await Promise.all([
-        keuanganAPI.getTagihan(filterTahunAkademik || null, filterStatus || null, filterProdi || null),
+        keuanganAPI.getTagihan(filterTahunAkademik || null, statusParam, prodiParam),
         filterTahunAkademik ? keuanganAPI.getRekap(filterTahunAkademik) : Promise.resolve({ data: null })
       ]);
       setTagihan(tagihanRes.data);
