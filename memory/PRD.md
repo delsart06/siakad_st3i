@@ -9,8 +9,8 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
 
 ### User Personas
 1. **Admin** - Super administrator who manages all master data, users, and academic operations
-2. **Dosen (Lecturer)** - Inputs grades, views assigned classes, validates KRS as Dosen PA
-3. **Mahasiswa (Student)** - Enrolls in courses (KRS), views grades (KHS), downloads transcripts
+2. **Dosen (Lecturer)** - Inputs grades, views assigned classes, validates KRS as Dosen PA, manages presensi
+3. **Mahasiswa (Student)** - Enrolls in courses (KRS), views grades (KHS), downloads transcripts, views jadwal & presensi
 
 ### Core Requirements (Static)
 - Tech Stack: FastAPI + React + MongoDB
@@ -22,11 +22,11 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
 
 ## What's Been Implemented
 
-### Date: 2025-01-28
+### Date: 2025-01-31
 
 #### Backend (FastAPI)
-- ✅ Authentication (Login/Logout, JWT tokens, password hashing)
-- ✅ User Management (CRUD, role-based access, toggle active)
+- ✅ Authentication (Login/Logout, JWT tokens, password hashing, **password reset**)
+- ✅ User Management (CRUD, role-based access, toggle active, **generate reset token**)
 - ✅ Master Data APIs:
   - Tahun Akademik (CRUD, active semester management)
   - Fakultas (CRUD)
@@ -40,6 +40,7 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
   - KRS (enrollment, approval/rejection)
   - Nilai (grade input, auto-calculation A-E)
   - KHS & Transkrip (IPK calculation)
+  - **Jadwal Kuliah (CRUD with conflict detection)**
 - ✅ Dashboard Stats API
 - ✅ **Mahasiswa Portal APIs:**
   - Profile mahasiswa (with dosen_pa_nama)
@@ -47,7 +48,18 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
   - KRS mahasiswa (get, create, delete) with kode_mk
   - KHS dengan IPK per semester
   - Transkrip lengkap dengan IPK kumulatif
-- ✅ **Dosen PA APIs:**
+  - **Jadwal kuliah mahasiswa**
+  - **Presensi rekap mahasiswa**
+- ✅ **Dosen Portal APIs:**
+  - Mahasiswa bimbingan list
+  - KRS bimbingan (approve/reject)
+  - **Presensi (create, list, detail, rekap)**
+  - **Input nilai mahasiswa**
+- ✅ **Password Reset APIs:**
+  - Forgot password (generate token)
+  - Verify reset token
+  - Reset password with token
+  - Admin generate reset token for user
   - Mahasiswa bimbingan list
   - KRS bimbingan (approve/reject)
 
