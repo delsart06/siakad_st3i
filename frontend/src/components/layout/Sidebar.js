@@ -16,6 +16,8 @@ import {
   School,
   UserCircle,
   BookMarked,
+  Wallet,
+  CreditCard,
 } from 'lucide-react';
 import {
   Collapsible,
@@ -26,7 +28,7 @@ import {
 const Sidebar = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
-  const [openMenus, setOpenMenus] = React.useState(['master', 'akademik']);
+  const [openMenus, setOpenMenus] = React.useState(['master', 'akademik', 'keuangan']);
 
   const isActive = (path) => location.pathname === path;
   const isParentActive = (paths) => paths.some(p => location.pathname.startsWith(p));
@@ -64,6 +66,15 @@ const Sidebar = () => {
         { path: '/akademik/krs', label: 'Validasi KRS', icon: ClipboardList },
       ],
     },
+    {
+      id: 'keuangan',
+      label: 'Keuangan',
+      icon: Wallet,
+      children: [
+        { path: '/keuangan/tagihan', label: 'Manajemen Tagihan', icon: CreditCard },
+        { path: '/keuangan/pembayaran', label: 'Verifikasi Pembayaran', icon: FileText },
+      ],
+    },
   ];
 
   const mahasiswaMenus = [
@@ -72,6 +83,7 @@ const Sidebar = () => {
     { path: '/mahasiswa/presensi', label: 'Presensi', icon: ClipboardList },
     { path: '/mahasiswa/khs', label: 'KHS', icon: FileText },
     { path: '/mahasiswa/transkrip', label: 'Transkrip', icon: FileText },
+    { path: '/mahasiswa/keuangan', label: 'Keuangan', icon: Wallet },
   ];
 
   const dosenMenus = [
