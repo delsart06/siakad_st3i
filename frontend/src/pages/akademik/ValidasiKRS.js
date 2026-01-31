@@ -136,6 +136,7 @@ const ValidasiKRS = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Mahasiswa</TableHead>
                   <TableHead>Mata Kuliah</TableHead>
                   <TableHead>Dosen</TableHead>
                   <TableHead>Jadwal</TableHead>
@@ -147,7 +148,7 @@ const ValidasiKRS = () => {
               <TableBody>
                 {data.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-slate-500">
+                    <TableCell colSpan={7} className="text-center py-8 text-slate-500">
                       <ClipboardList className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                       <p>Tidak ada pengajuan KRS</p>
                     </TableCell>
@@ -155,6 +156,12 @@ const ValidasiKRS = () => {
                 ) : (
                   data.map((item, index) => (
                     <TableRow key={item.id} className="animate-fadeIn" style={{ animationDelay: `${index * 30}ms` }}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{item.mahasiswa_nama || '-'}</div>
+                          <div className="text-xs text-slate-500 font-mono">{item.mahasiswa_nim || '-'}</div>
+                        </div>
+                      </TableCell>
                       <TableCell className="font-medium">{item.mata_kuliah_nama || '-'}</TableCell>
                       <TableCell className="text-slate-600">{item.dosen_nama || '-'}</TableCell>
                       <TableCell className="text-slate-600">{item.jadwal || '-'}</TableCell>
