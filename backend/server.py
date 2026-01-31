@@ -36,6 +36,7 @@ master_router = APIRouter(prefix="/master", tags=["Master Data"])
 akademik_router = APIRouter(prefix="/akademik", tags=["Akademik"])
 mahasiswa_router = APIRouter(prefix="/mahasiswa", tags=["Mahasiswa"])
 dosen_router = APIRouter(prefix="/dosen", tags=["Dosen"])
+keuangan_router = APIRouter(prefix="/keuangan", tags=["Keuangan"])
 
 security = HTTPBearer()
 
