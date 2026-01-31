@@ -99,7 +99,7 @@ export const mahasiswaAPI = {
 };
 
 // Master Data - Dosen
-export const dosenAPI = {
+export const dosenMasterAPI = {
   getAll: (prodiId = null) => api.get('/master/dosen', { params: { prodi_id: prodiId } }),
   create: (data) => api.post('/master/dosen', data),
   update: (id, data) => api.put(`/master/dosen/${id}`, data),
