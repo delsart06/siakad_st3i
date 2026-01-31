@@ -318,7 +318,7 @@ const ManajemenTagihan = () => {
                   <SelectValue placeholder="Semua Prodi" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Semua Prodi</SelectItem>
+                  <SelectItem value="all">Semua Prodi</SelectItem>
                   {prodiList.map(p => (
                     <SelectItem key={p.id} value={p.id}>{p.nama}</SelectItem>
                   ))}
@@ -332,7 +332,7 @@ const ManajemenTagihan = () => {
                   <SelectValue placeholder="Semua Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Semua Status</SelectItem>
+                  <SelectItem value="all">Semua Status</SelectItem>
                   <SelectItem value="belum_bayar">Belum Bayar</SelectItem>
                   <SelectItem value="cicilan">Cicilan</SelectItem>
                   <SelectItem value="lunas">Lunas</SelectItem>
@@ -542,7 +542,7 @@ const ManajemenTagihan = () => {
                   <SelectValue placeholder="Semua Prodi" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Semua Prodi</SelectItem>
+                  <SelectItem value="all">Semua Prodi</SelectItem>
                   {prodiList.map(p => (
                     <SelectItem key={p.id} value={p.id}>{p.nama}</SelectItem>
                   ))}
