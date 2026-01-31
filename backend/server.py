@@ -3031,6 +3031,7 @@ api_router.include_router(master_router)
 api_router.include_router(akademik_router)
 api_router.include_router(mahasiswa_router)
 api_router.include_router(dosen_router)
+api_router.include_router(keuangan_router)
 
 app.include_router(api_router)
 
