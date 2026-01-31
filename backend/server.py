@@ -2787,6 +2787,7 @@ async def delete_tagihan(
 # ----- Pembayaran UKT -----
 @keuangan_router.get("/pembayaran", response_model=List[PembayaranUKTResponse])
 async def get_all_pembayaran(
+    tahun_akademik_id: Optional[str] = None,
     status: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
@@ -2802,6 +2803,11 @@ async def get_all_pembayaran(
     result = []
     for item in items:
         tagihan = await db.tagihan_ukt.find_one({"id": item["tagihan_id"]}, {"_id": 0})
+        
+        # Filter by tahun_akademik_id if specified
+        if tahun_akademik_id and tagihan and tagihan.get("tahun_akademik_id") != tahun_akademik_id:
+            continue
+        
         mhs = None
         if tagihan:
             mhs = await db.mahasiswa.find_one({"id": tagihan["mahasiswa_id"]}, {"_id": 0})
