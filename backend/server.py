@@ -1711,6 +1711,703 @@ async def toggle_user_active(
     
     return {"message": f"User {'diaktifkan' if new_status else 'dinonaktifkan'}"}
 
+# ==================== JADWAL KULIAH (SCHEDULE MANAGEMENT) ====================
+
+def parse_time(time_str: str) -> int:
+    """Convert HH:MM to minutes from midnight for comparison"""
+    h, m = map(int, time_str.split(':'))
+    return h * 60 + m
+
+def check_time_overlap(start1: str, end1: str, start2: str, end2: str) -> bool:
+    """Check if two time ranges overlap"""
+    s1, e1 = parse_time(start1), parse_time(end1)
+    s2, e2 = parse_time(start2), parse_time(end2)
+    return s1 < e2 and s2 < e1
+
+@akademik_router.post("/jadwal", response_model=KelasJadwalResponse)
+async def create_jadwal_kelas(
+    data: KelasJadwalCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    # Check for conflicts
+    conflicts = []
+    
+    # 1. Check room conflict (same room, same day, overlapping time)
+    if data.ruangan:
+        room_conflict = await db.kelas.find_one({
+            "ruangan": data.ruangan,
+            "hari": data.hari,
+            "tahun_akademik_id": data.tahun_akademik_id,
+        }, {"_id": 0})
+        
+        if room_conflict and check_time_overlap(
+            data.jam_mulai, data.jam_selesai,
+            room_conflict.get("jam_mulai", "00:00"),
+            room_conflict.get("jam_selesai", "00:00")
+        ):
+            conflicts.append(f"Ruangan {data.ruangan} sudah digunakan pada {data.hari} {room_conflict['jam_mulai']}-{room_conflict['jam_selesai']}")
+    
+    # 2. Check dosen conflict (same dosen, same day, overlapping time)
+    dosen_conflict = await db.kelas.find_one({
+        "dosen_id": data.dosen_id,
+        "hari": data.hari,
+        "tahun_akademik_id": data.tahun_akademik_id,
+    }, {"_id": 0})
+    
+    if dosen_conflict and check_time_overlap(
+        data.jam_mulai, data.jam_selesai,
+        dosen_conflict.get("jam_mulai", "00:00"),
+        dosen_conflict.get("jam_selesai", "00:00")
+    ):
+        dosen = await db.dosen.find_one({"id": data.dosen_id}, {"_id": 0})
+        dosen_nama = dosen["nama"] if dosen else "Dosen"
+        conflicts.append(f"{dosen_nama} sudah mengajar pada {data.hari} {dosen_conflict['jam_mulai']}-{dosen_conflict['jam_selesai']}")
+    
+    if conflicts:
+        raise HTTPException(status_code=400, detail={"message": "Terdapat konflik jadwal", "conflicts": conflicts})
+    
+    # Create kelas with jadwal
+    kelas_id = str(uuid.uuid4())
+    jadwal_str = f"{data.hari} {data.jam_mulai}-{data.jam_selesai}"
+    
+    doc = {
+        "id": kelas_id,
+        "kode_kelas": data.kode_kelas,
+        "mata_kuliah_id": data.mata_kuliah_id,
+        "dosen_id": data.dosen_id,
+        "tahun_akademik_id": data.tahun_akademik_id,
+        "kuota": data.kuota,
+        "hari": data.hari,
+        "jam_mulai": data.jam_mulai,
+        "jam_selesai": data.jam_selesai,
+        "ruangan": data.ruangan,
+        "jadwal": jadwal_str,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.kelas.insert_one(doc)
+    
+    mk = await db.mata_kuliah.find_one({"id": data.mata_kuliah_id}, {"_id": 0})
+    dosen = await db.dosen.find_one({"id": data.dosen_id}, {"_id": 0})
+    
+    return KelasJadwalResponse(
+        **doc,
+        mata_kuliah_nama=mk["nama"] if mk else None,
+        dosen_nama=dosen["nama"] if dosen else None,
+        jumlah_peserta=0
+    )
+
+@akademik_router.put("/jadwal/{item_id}", response_model=KelasJadwalResponse)
+async def update_jadwal_kelas(
+    item_id: str,
+    data: KelasJadwalCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    existing = await db.kelas.find_one({"id": item_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Kelas tidak ditemukan")
+    
+    # Check for conflicts (excluding current kelas)
+    conflicts = []
+    
+    # Room conflict
+    if data.ruangan:
+        room_conflict = await db.kelas.find_one({
+            "ruangan": data.ruangan,
+            "hari": data.hari,
+            "tahun_akademik_id": data.tahun_akademik_id,
+            "id": {"$ne": item_id}
+        }, {"_id": 0})
+        
+        if room_conflict and check_time_overlap(
+            data.jam_mulai, data.jam_selesai,
+            room_conflict.get("jam_mulai", "00:00"),
+            room_conflict.get("jam_selesai", "00:00")
+        ):
+            conflicts.append(f"Ruangan {data.ruangan} sudah digunakan")
+    
+    # Dosen conflict
+    dosen_conflict = await db.kelas.find_one({
+        "dosen_id": data.dosen_id,
+        "hari": data.hari,
+        "tahun_akademik_id": data.tahun_akademik_id,
+        "id": {"$ne": item_id}
+    }, {"_id": 0})
+    
+    if dosen_conflict and check_time_overlap(
+        data.jam_mulai, data.jam_selesai,
+        dosen_conflict.get("jam_mulai", "00:00"),
+        dosen_conflict.get("jam_selesai", "00:00")
+    ):
+        conflicts.append("Dosen sudah mengajar pada waktu tersebut")
+    
+    if conflicts:
+        raise HTTPException(status_code=400, detail={"message": "Terdapat konflik jadwal", "conflicts": conflicts})
+    
+    jadwal_str = f"{data.hari} {data.jam_mulai}-{data.jam_selesai}"
+    
+    update_data = {
+        "kode_kelas": data.kode_kelas,
+        "mata_kuliah_id": data.mata_kuliah_id,
+        "dosen_id": data.dosen_id,
+        "tahun_akademik_id": data.tahun_akademik_id,
+        "kuota": data.kuota,
+        "hari": data.hari,
+        "jam_mulai": data.jam_mulai,
+        "jam_selesai": data.jam_selesai,
+        "ruangan": data.ruangan,
+        "jadwal": jadwal_str,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.kelas.update_one({"id": item_id}, {"$set": update_data})
+    
+    mk = await db.mata_kuliah.find_one({"id": data.mata_kuliah_id}, {"_id": 0})
+    dosen = await db.dosen.find_one({"id": data.dosen_id}, {"_id": 0})
+    krs_count = await db.krs.count_documents({"kelas_id": item_id, "status": "disetujui"})
+    
+    return KelasJadwalResponse(
+        id=item_id,
+        **update_data,
+        mata_kuliah_nama=mk["nama"] if mk else None,
+        dosen_nama=dosen["nama"] if dosen else None,
+        jumlah_peserta=krs_count
+    )
+
+@akademik_router.get("/jadwal", response_model=List[KelasJadwalResponse])
+async def get_all_jadwal(
+    tahun_akademik_id: Optional[str] = None,
+    hari: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    query = {}
+    if tahun_akademik_id:
+        query["tahun_akademik_id"] = tahun_akademik_id
+    if hari:
+        query["hari"] = hari
+    
+    items = await db.kelas.find(query, {"_id": 0}).to_list(500)
+    
+    result = []
+    for item in items:
+        mk = await db.mata_kuliah.find_one({"id": item["mata_kuliah_id"]}, {"_id": 0})
+        dosen = await db.dosen.find_one({"id": item["dosen_id"]}, {"_id": 0})
+        krs_count = await db.krs.count_documents({"kelas_id": item["id"], "status": "disetujui"})
+        
+        result.append(KelasJadwalResponse(
+            id=item["id"],
+            kode_kelas=item["kode_kelas"],
+            mata_kuliah_id=item["mata_kuliah_id"],
+            mata_kuliah_nama=mk["nama"] if mk else None,
+            dosen_id=item["dosen_id"],
+            dosen_nama=dosen["nama"] if dosen else None,
+            tahun_akademik_id=item["tahun_akademik_id"],
+            kuota=item.get("kuota", 40),
+            hari=item.get("hari", ""),
+            jam_mulai=item.get("jam_mulai", ""),
+            jam_selesai=item.get("jam_selesai", ""),
+            ruangan=item.get("ruangan"),
+            jumlah_peserta=krs_count
+        ))
+    
+    return result
+
+@akademik_router.get("/jadwal/check-conflict")
+async def check_jadwal_conflict(
+    hari: str,
+    jam_mulai: str,
+    jam_selesai: str,
+    tahun_akademik_id: str,
+    dosen_id: Optional[str] = None,
+    ruangan: Optional[str] = None,
+    exclude_kelas_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    conflicts = []
+    
+    # Check room conflict
+    if ruangan:
+        room_query = {
+            "ruangan": ruangan,
+            "hari": hari,
+            "tahun_akademik_id": tahun_akademik_id
+        }
+        if exclude_kelas_id:
+            room_query["id"] = {"$ne": exclude_kelas_id}
+        
+        room_conflicts = await db.kelas.find(room_query, {"_id": 0}).to_list(100)
+        for rc in room_conflicts:
+            if check_time_overlap(jam_mulai, jam_selesai, rc.get("jam_mulai", "00:00"), rc.get("jam_selesai", "00:00")):
+                mk = await db.mata_kuliah.find_one({"id": rc["mata_kuliah_id"]}, {"_id": 0})
+                conflicts.append({
+                    "type": "room",
+                    "message": f"Ruangan {ruangan} digunakan untuk {mk['nama'] if mk else rc['kode_kelas']} ({rc['jam_mulai']}-{rc['jam_selesai']})"
+                })
+    
+    # Check dosen conflict
+    if dosen_id:
+        dosen_query = {
+            "dosen_id": dosen_id,
+            "hari": hari,
+            "tahun_akademik_id": tahun_akademik_id
+        }
+        if exclude_kelas_id:
+            dosen_query["id"] = {"$ne": exclude_kelas_id}
+        
+        dosen_conflicts = await db.kelas.find(dosen_query, {"_id": 0}).to_list(100)
+        for dc in dosen_conflicts:
+            if check_time_overlap(jam_mulai, jam_selesai, dc.get("jam_mulai", "00:00"), dc.get("jam_selesai", "00:00")):
+                mk = await db.mata_kuliah.find_one({"id": dc["mata_kuliah_id"]}, {"_id": 0})
+                conflicts.append({
+                    "type": "dosen",
+                    "message": f"Dosen mengajar {mk['nama'] if mk else dc['kode_kelas']} ({dc['jam_mulai']}-{dc['jam_selesai']})"
+                })
+    
+    return {"has_conflict": len(conflicts) > 0, "conflicts": conflicts}
+
+# Mahasiswa jadwal view
+@mahasiswa_router.get("/jadwal")
+async def get_my_jadwal(
+    tahun_akademik_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    mhs = await db.mahasiswa.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not mhs:
+        raise HTTPException(status_code=404, detail="Data mahasiswa tidak ditemukan")
+    
+    query = {"mahasiswa_id": mhs["id"], "status": "disetujui"}
+    if tahun_akademik_id:
+        query["tahun_akademik_id"] = tahun_akademik_id
+    
+    krs_list = await db.krs.find(query, {"_id": 0}).to_list(100)
+    
+    result = []
+    for krs in krs_list:
+        kelas = await db.kelas.find_one({"id": krs["kelas_id"]}, {"_id": 0})
+        if kelas:
+            mk = await db.mata_kuliah.find_one({"id": kelas["mata_kuliah_id"]}, {"_id": 0})
+            dosen = await db.dosen.find_one({"id": kelas["dosen_id"]}, {"_id": 0})
+            
+            result.append({
+                "kelas_id": kelas["id"],
+                "kode_kelas": kelas["kode_kelas"],
+                "mata_kuliah_nama": mk["nama"] if mk else None,
+                "dosen_nama": dosen["nama"] if dosen else None,
+                "hari": kelas.get("hari", ""),
+                "jam_mulai": kelas.get("jam_mulai", ""),
+                "jam_selesai": kelas.get("jam_selesai", ""),
+                "ruangan": kelas.get("ruangan"),
+                "jadwal": kelas.get("jadwal")
+            })
+    
+    # Sort by day order
+    day_order = {"Senin": 1, "Selasa": 2, "Rabu": 3, "Kamis": 4, "Jumat": 5, "Sabtu": 6, "Minggu": 7}
+    result.sort(key=lambda x: (day_order.get(x["hari"], 8), x["jam_mulai"]))
+    
+    return result
+
+# ==================== PRESENSI (ATTENDANCE) ====================
+
+@dosen_router.post("/presensi")
+async def create_presensi(
+    data: PresensiCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] not in ["admin", "dosen"]:
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    # Check if presensi already exists
+    existing = await db.presensi.find_one({
+        "kelas_id": data.kelas_id,
+        "pertemuan_ke": data.pertemuan_ke
+    }, {"_id": 0})
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Presensi untuk pertemuan ini sudah ada")
+    
+    presensi_id = str(uuid.uuid4())
+    doc = {
+        "id": presensi_id,
+        "kelas_id": data.kelas_id,
+        "pertemuan_ke": data.pertemuan_ke,
+        "tanggal": data.tanggal,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"]
+    }
+    
+    await db.presensi.insert_one(doc)
+    
+    return PresensiResponse(**doc)
+
+@dosen_router.get("/presensi/{kelas_id}")
+async def get_presensi_list(
+    kelas_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    presensi_list = await db.presensi.find(
+        {"kelas_id": kelas_id},
+        {"_id": 0}
+    ).sort("pertemuan_ke", 1).to_list(100)
+    
+    return presensi_list
+
+@dosen_router.post("/presensi/{presensi_id}/detail")
+async def save_presensi_detail(
+    presensi_id: str,
+    details: List[PresensiDetailCreate],
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] not in ["admin", "dosen"]:
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    presensi = await db.presensi.find_one({"id": presensi_id}, {"_id": 0})
+    if not presensi:
+        raise HTTPException(status_code=404, detail="Presensi tidak ditemukan")
+    
+    # Delete existing details for this presensi
+    await db.presensi_detail.delete_many({"presensi_id": presensi_id})
+    
+    # Insert new details
+    for detail in details:
+        doc = {
+            "id": str(uuid.uuid4()),
+            "presensi_id": presensi_id,
+            "mahasiswa_id": detail.mahasiswa_id,
+            "status": detail.status,
+            "keterangan": detail.keterangan,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.presensi_detail.insert_one(doc)
+    
+    return {"message": f"Presensi {len(details)} mahasiswa berhasil disimpan"}
+
+@dosen_router.get("/presensi/{presensi_id}/detail")
+async def get_presensi_detail(
+    presensi_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    presensi = await db.presensi.find_one({"id": presensi_id}, {"_id": 0})
+    if not presensi:
+        raise HTTPException(status_code=404, detail="Presensi tidak ditemukan")
+    
+    # Get all mahasiswa enrolled in this class
+    krs_list = await db.krs.find(
+        {"kelas_id": presensi["kelas_id"], "status": "disetujui"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    result = []
+    for krs in krs_list:
+        mhs = await db.mahasiswa.find_one({"id": krs["mahasiswa_id"]}, {"_id": 0})
+        if mhs:
+            # Check if detail exists
+            detail = await db.presensi_detail.find_one({
+                "presensi_id": presensi_id,
+                "mahasiswa_id": mhs["id"]
+            }, {"_id": 0})
+            
+            result.append({
+                "mahasiswa_id": mhs["id"],
+                "mahasiswa_nama": mhs["nama"],
+                "mahasiswa_nim": mhs["nim"],
+                "status": detail["status"] if detail else "hadir",
+                "keterangan": detail.get("keterangan") if detail else None,
+                "has_record": detail is not None
+            })
+    
+    # Sort by NIM
+    result.sort(key=lambda x: x["mahasiswa_nim"])
+    
+    return result
+
+@dosen_router.get("/presensi/{kelas_id}/rekap")
+async def get_rekap_presensi(
+    kelas_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    # Get all presensi for this class
+    presensi_list = await db.presensi.find({"kelas_id": kelas_id}, {"_id": 0}).to_list(100)
+    total_pertemuan = len(presensi_list)
+    presensi_ids = [p["id"] for p in presensi_list]
+    
+    # Get all mahasiswa enrolled
+    krs_list = await db.krs.find(
+        {"kelas_id": kelas_id, "status": "disetujui"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    result = []
+    for krs in krs_list:
+        mhs = await db.mahasiswa.find_one({"id": krs["mahasiswa_id"]}, {"_id": 0})
+        if mhs:
+            # Count attendance by status
+            hadir = await db.presensi_detail.count_documents({
+                "presensi_id": {"$in": presensi_ids},
+                "mahasiswa_id": mhs["id"],
+                "status": "hadir"
+            })
+            izin = await db.presensi_detail.count_documents({
+                "presensi_id": {"$in": presensi_ids},
+                "mahasiswa_id": mhs["id"],
+                "status": "izin"
+            })
+            sakit = await db.presensi_detail.count_documents({
+                "presensi_id": {"$in": presensi_ids},
+                "mahasiswa_id": mhs["id"],
+                "status": "sakit"
+            })
+            alpha = await db.presensi_detail.count_documents({
+                "presensi_id": {"$in": presensi_ids},
+                "mahasiswa_id": mhs["id"],
+                "status": "alpha"
+            })
+            
+            persentase = (hadir / total_pertemuan * 100) if total_pertemuan > 0 else 0
+            
+            result.append(RekapPresensiResponse(
+                mahasiswa_id=mhs["id"],
+                mahasiswa_nama=mhs["nama"],
+                mahasiswa_nim=mhs["nim"],
+                hadir=hadir,
+                izin=izin,
+                sakit=sakit,
+                alpha=alpha,
+                total_pertemuan=total_pertemuan,
+                persentase_kehadiran=round(persentase, 1)
+            ))
+    
+    # Sort by NIM
+    result.sort(key=lambda x: x.mahasiswa_nim)
+    
+    return result
+
+# Mahasiswa view presensi
+@mahasiswa_router.get("/presensi")
+async def get_my_presensi(
+    kelas_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    mhs = await db.mahasiswa.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not mhs:
+        raise HTTPException(status_code=404, detail="Data mahasiswa tidak ditemukan")
+    
+    # Get my presensi details
+    query = {"mahasiswa_id": mhs["id"]}
+    
+    details = await db.presensi_detail.find(query, {"_id": 0}).to_list(500)
+    
+    result = []
+    for detail in details:
+        presensi = await db.presensi.find_one({"id": detail["presensi_id"]}, {"_id": 0})
+        if presensi:
+            if kelas_id and presensi["kelas_id"] != kelas_id:
+                continue
+            
+            kelas = await db.kelas.find_one({"id": presensi["kelas_id"]}, {"_id": 0})
+            mk = await db.mata_kuliah.find_one({"id": kelas["mata_kuliah_id"]}, {"_id": 0}) if kelas else None
+            
+            result.append({
+                "presensi_id": presensi["id"],
+                "kelas_id": presensi["kelas_id"],
+                "mata_kuliah_nama": mk["nama"] if mk else None,
+                "pertemuan_ke": presensi["pertemuan_ke"],
+                "tanggal": presensi["tanggal"],
+                "status": detail["status"],
+                "keterangan": detail.get("keterangan")
+            })
+    
+    # Sort by tanggal descending
+    result.sort(key=lambda x: x["tanggal"], reverse=True)
+    
+    return result
+
+@mahasiswa_router.get("/presensi/rekap")
+async def get_my_presensi_rekap(
+    tahun_akademik_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    mhs = await db.mahasiswa.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not mhs:
+        raise HTTPException(status_code=404, detail="Data mahasiswa tidak ditemukan")
+    
+    # Get my KRS
+    krs_query = {"mahasiswa_id": mhs["id"], "status": "disetujui"}
+    if tahun_akademik_id:
+        krs_query["tahun_akademik_id"] = tahun_akademik_id
+    
+    krs_list = await db.krs.find(krs_query, {"_id": 0}).to_list(100)
+    
+    result = []
+    for krs in krs_list:
+        kelas = await db.kelas.find_one({"id": krs["kelas_id"]}, {"_id": 0})
+        if kelas:
+            mk = await db.mata_kuliah.find_one({"id": kelas["mata_kuliah_id"]}, {"_id": 0})
+            
+            # Get presensi for this class
+            presensi_list = await db.presensi.find({"kelas_id": kelas["id"]}, {"_id": 0}).to_list(100)
+            presensi_ids = [p["id"] for p in presensi_list]
+            total_pertemuan = len(presensi_list)
+            
+            # Count attendance
+            hadir = await db.presensi_detail.count_documents({
+                "presensi_id": {"$in": presensi_ids},
+                "mahasiswa_id": mhs["id"],
+                "status": "hadir"
+            })
+            izin = await db.presensi_detail.count_documents({
+                "presensi_id": {"$in": presensi_ids},
+                "mahasiswa_id": mhs["id"],
+                "status": "izin"
+            })
+            sakit = await db.presensi_detail.count_documents({
+                "presensi_id": {"$in": presensi_ids},
+                "mahasiswa_id": mhs["id"],
+                "status": "sakit"
+            })
+            alpha = await db.presensi_detail.count_documents({
+                "presensi_id": {"$in": presensi_ids},
+                "mahasiswa_id": mhs["id"],
+                "status": "alpha"
+            })
+            
+            persentase = (hadir / total_pertemuan * 100) if total_pertemuan > 0 else 0
+            
+            result.append({
+                "kelas_id": kelas["id"],
+                "mata_kuliah_nama": mk["nama"] if mk else None,
+                "hadir": hadir,
+                "izin": izin,
+                "sakit": sakit,
+                "alpha": alpha,
+                "total_pertemuan": total_pertemuan,
+                "persentase_kehadiran": round(persentase, 1)
+            })
+    
+    return result
+
+# ==================== PASSWORD RESET ====================
+
+@auth_router.post("/forgot-password")
+async def forgot_password(data: PasswordResetRequest):
+    user = await db.users.find_one({"email": data.email}, {"_id": 0})
+    if not user:
+        # Don't reveal if email exists or not for security
+        return {"message": "Jika email terdaftar, link reset password akan dikirim"}
+    
+    # Generate reset token
+    reset_token = str(uuid.uuid4())
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+    
+    await db.password_resets.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "email": data.email,
+        "token": reset_token,
+        "expires_at": expires_at.isoformat(),
+        "used": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # In production, send email here. For now, return token for testing
+    # NOTE: In real app, don't return token in response - send via email
+    return {
+        "message": "Token reset password telah dibuat",
+        "reset_token": reset_token,  # Remove this in production
+        "expires_in": "24 jam"
+    }
+
+@auth_router.post("/reset-password")
+async def reset_password(data: PasswordResetVerify):
+    reset_record = await db.password_resets.find_one({
+        "token": data.token,
+        "used": False
+    }, {"_id": 0})
+    
+    if not reset_record:
+        raise HTTPException(status_code=400, detail="Token tidak valid atau sudah digunakan")
+    
+    # Check expiry
+    expires_at = datetime.fromisoformat(reset_record["expires_at"].replace('Z', '+00:00'))
+    if datetime.now(timezone.utc) > expires_at:
+        raise HTTPException(status_code=400, detail="Token sudah kadaluarsa")
+    
+    # Update password
+    hashed = hash_password(data.new_password)
+    await db.users.update_one(
+        {"id": reset_record["user_id"]},
+        {"$set": {"password": hashed, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # Mark token as used
+    await db.password_resets.update_one(
+        {"token": data.token},
+        {"$set": {"used": True, "used_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Password berhasil direset"}
+
+@auth_router.get("/verify-reset-token/{token}")
+async def verify_reset_token(token: str):
+    reset_record = await db.password_resets.find_one({
+        "token": token,
+        "used": False
+    }, {"_id": 0})
+    
+    if not reset_record:
+        return {"valid": False, "message": "Token tidak valid atau sudah digunakan"}
+    
+    expires_at = datetime.fromisoformat(reset_record["expires_at"].replace('Z', '+00:00'))
+    if datetime.now(timezone.utc) > expires_at:
+        return {"valid": False, "message": "Token sudah kadaluarsa"}
+    
+    user = await db.users.find_one({"id": reset_record["user_id"]}, {"_id": 0, "password": 0})
+    
+    return {
+        "valid": True,
+        "email": reset_record["email"],
+        "user_name": user["nama"] if user else None
+    }
+
+# Admin generate reset token for user
+@api_router.post("/users/{user_id}/generate-reset-token")
+async def admin_generate_reset_token(
+    user_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User tidak ditemukan")
+    
+    reset_token = str(uuid.uuid4())
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+    
+    await db.password_resets.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "email": user["email"],
+        "token": reset_token,
+        "expires_at": expires_at.isoformat(),
+        "used": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "generated_by": current_user["id"]
+    })
+    
+    return {
+        "message": f"Token reset untuk {user['email']} berhasil dibuat",
+        "reset_token": reset_token,
+        "reset_url": f"/reset-password?token={reset_token}",
+        "expires_in": "24 jam"
+    }
+
 # Include routers
 api_router.include_router(auth_router)
 api_router.include_router(master_router)
