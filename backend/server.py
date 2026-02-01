@@ -55,13 +55,26 @@ class TimestampMixin(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+# Role Constants - Hierarchical Access
+ROLE_ADMIN = "admin"           # Super admin - full access
+ROLE_REKTOR = "rektor"         # Rector - all data access (pimpinan level)
+ROLE_DEKAN = "dekan"           # Dean - access all prodi in their fakultas
+ROLE_KAPRODI = "kaprodi"       # Head of Study Program - access their prodi only
+ROLE_DOSEN = "dosen"           # Lecturer
+ROLE_MAHASISWA = "mahasiswa"   # Student
+
+MANAGEMENT_ROLES = [ROLE_ADMIN, ROLE_REKTOR, ROLE_DEKAN, ROLE_KAPRODI]
+ALL_ACCESS_ROLES = [ROLE_ADMIN, ROLE_REKTOR]
+
 # User & Auth Models
 class UserBase(BaseModel):
     email: EmailStr
     nama: str
-    role: str  # admin, dosen, mahasiswa
+    role: str  # admin, rektor, dekan, kaprodi, dosen, mahasiswa
     user_id_number: Optional[str] = None  # NIM/NIDN/NIP
     foto_profil: Optional[str] = None
+    prodi_id: Optional[str] = None      # For kaprodi - their prodi
+    fakultas_id: Optional[str] = None   # For dekan - their fakultas
 
 class UserCreate(UserBase):
     password: str
