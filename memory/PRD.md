@@ -113,8 +113,8 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
   - **Approve/Reject** - Setujui atau tolak dengan catatan
 - ✅ **Password Reset:**
   - Self-service forgot password flow
-  - Admin-generated reset token untuk user (via Manajemen User)
-  - Token berlaku 24 jam dengan link yang bisa dicopy
+  - Admin generate password baru langsung (8 digit angka acak)
+  - Password langsung berubah tanpa perlu email
   - **Lupa Password Page** - Request reset token via email
   - **Reset Password Page** - Set new password with token validation
 - ✅ **PDF Components:**
