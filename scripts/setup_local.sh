@@ -1,158 +1,162 @@
 #!/bin/bash
 
-# SIAKAD - Local Development Setup Script
-# Jalankan script ini untuk setup otomatis di Linux/Mac
+# ==================================================
+# SIAKAD Local Development Setup Script
+# ==================================================
 
-echo "=========================================="
-echo "  SIAKAD - Local Development Setup"
-echo "=========================================="
+set -e
+
+echo "=================================================="
+echo "   SIAKAD - Setup Local Development"
+echo "=================================================="
 echo ""
 
-# Warna untuk output
+# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Function untuk print status
-print_status() {
-    echo -e "${GREEN}[✓]${NC} $1"
-}
-
-print_warning() {
-    echo -e "${YELLOW}[!]${NC} $1"
-}
-
-print_error() {
-    echo -e "${RED}[✗]${NC} $1"
-}
-
 # Check prerequisites
 echo "Checking prerequisites..."
-echo ""
 
 # Check Python
 if command -v python3 &> /dev/null; then
-    PYTHON_VERSION=$(python3 --version 2>&1 | cut -d' ' -f2)
-    print_status "Python $PYTHON_VERSION found"
+    PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
+    echo -e "${GREEN}✓${NC} Python: $PYTHON_VERSION"
 else
-    print_error "Python 3 not found. Please install Python 3.9+"
+    echo -e "${RED}✗${NC} Python 3 not found. Please install Python 3.9+"
     exit 1
 fi
 
 # Check Node.js
 if command -v node &> /dev/null; then
     NODE_VERSION=$(node --version)
-    print_status "Node.js $NODE_VERSION found"
+    echo -e "${GREEN}✓${NC} Node.js: $NODE_VERSION"
 else
-    print_error "Node.js not found. Please install Node.js 18+"
+    echo -e "${RED}✗${NC} Node.js not found. Please install Node.js 18+"
     exit 1
 fi
 
 # Check MongoDB
-if command -v mongod &> /dev/null; then
-    print_status "MongoDB found"
+if command -v mongod &> /dev/null || pgrep -x "mongod" > /dev/null; then
+    echo -e "${GREEN}✓${NC} MongoDB available"
 else
-    print_warning "MongoDB not found locally. Make sure you have MongoDB running (local or Atlas)"
+    echo -e "${YELLOW}!${NC} MongoDB not found in PATH. Make sure it's running."
 fi
 
 echo ""
-echo "=========================================="
-echo "  Setting up Backend..."
-echo "=========================================="
-echo ""
+
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
+cd "$PROJECT_DIR"
+
+# ==================================================
+# Setup Backend
+# ==================================================
+echo "Setting up Backend..."
 
 cd backend
 
-# Create virtual environment
+# Create virtual environment if not exists
 if [ ! -d "venv" ]; then
-    echo "Creating virtual environment..."
+    echo "  Creating virtual environment..."
     python3 -m venv venv
-    print_status "Virtual environment created"
-else
-    print_status "Virtual environment already exists"
 fi
 
 # Activate virtual environment
 source venv/bin/activate
-print_status "Virtual environment activated"
 
 # Install dependencies
-echo "Installing Python dependencies..."
-pip install -r requirements.txt --quiet
-print_status "Python dependencies installed"
+echo "  Installing Python dependencies..."
+pip install -q -r requirements.txt
 
-# Check/create .env file
+# Create .env if not exists
 if [ ! -f ".env" ]; then
-    echo "Creating backend .env file..."
-    cat > .env << EOL
+    echo "  Creating backend/.env..."
+    cat > .env << 'EOF'
 MONGO_URL=mongodb://localhost:27017
 DB_NAME=siakad
 JWT_SECRET=siakad-secret-key-2024-secure
 CORS_ORIGINS=http://localhost:3000
-EOL
-    print_status "Backend .env file created"
-else
-    print_status "Backend .env file already exists"
+EOF
 fi
+
+# Create uploads directory
+mkdir -p uploads/biodata uploads/foto_profil
+
+echo -e "${GREEN}✓${NC} Backend setup complete"
 
 cd ..
 
+# ==================================================
+# Setup Frontend
+# ==================================================
 echo ""
-echo "=========================================="
-echo "  Setting up Frontend..."
-echo "=========================================="
-echo ""
+echo "Setting up Frontend..."
 
 cd frontend
 
 # Install dependencies
-echo "Installing Node.js dependencies (this may take a while)..."
-if command -v yarn &> /dev/null; then
+if [ -f "yarn.lock" ]; then
+    echo "  Installing Node dependencies with yarn..."
     yarn install --silent
 else
+    echo "  Installing Node dependencies with npm..."
     npm install --silent
 fi
-print_status "Node.js dependencies installed"
 
-# Check/create .env file
+# Create .env if not exists
 if [ ! -f ".env" ]; then
-    echo "Creating frontend .env file..."
-    cat > .env << EOL
+    echo "  Creating frontend/.env..."
+    cat > .env << 'EOF'
 REACT_APP_BACKEND_URL=http://localhost:8001
-EOL
-    print_status "Frontend .env file created"
-else
-    print_status "Frontend .env file already exists"
+EOF
 fi
+
+echo -e "${GREEN}✓${NC} Frontend setup complete"
 
 cd ..
 
+# ==================================================
+# Seed Database
+# ==================================================
 echo ""
-echo "=========================================="
-echo "  Setup Complete!"
-echo "=========================================="
+echo "Seeding database..."
+
+cd backend
+source venv/bin/activate
+python ../scripts/seed_data.py
+
+cd ..
+
+# ==================================================
+# Done
+# ==================================================
+echo ""
+echo "=================================================="
+echo -e "${GREEN}   SETUP COMPLETE!${NC}"
+echo "=================================================="
 echo ""
 echo "To start the application:"
 echo ""
-echo "1. Start MongoDB:"
-echo "   ${YELLOW}mongod${NC} atau ${YELLOW}sudo systemctl start mongod${NC}"
+echo "  ${YELLOW}Terminal 1 (Backend):${NC}"
+echo "    cd backend"
+echo "    source venv/bin/activate"
+echo "    uvicorn server:app --host 0.0.0.0 --port 8001 --reload"
 echo ""
-echo "2. Start Backend (Terminal 1):"
-echo "   ${YELLOW}cd backend${NC}"
-echo "   ${YELLOW}source venv/bin/activate${NC}"
-echo "   ${YELLOW}uvicorn server:app --host 0.0.0.0 --port 8001 --reload${NC}"
+echo "  ${YELLOW}Terminal 2 (Frontend):${NC}"
+echo "    cd frontend"
+echo "    yarn start  # atau npm start"
 echo ""
-echo "3. Start Frontend (Terminal 2):"
-echo "   ${YELLOW}cd frontend${NC}"
-echo "   ${YELLOW}yarn start${NC} atau ${YELLOW}npm start${NC}"
+echo "Then open:"
+echo "  - Frontend: http://localhost:3000"
+echo "  - API Docs: http://localhost:8001/docs"
 echo ""
-echo "4. Open browser:"
-echo "   Frontend: ${GREEN}http://localhost:3000${NC}"
-echo "   API Docs: ${GREEN}http://localhost:8001/docs${NC}"
+echo "Login dengan:"
+echo "  - Admin: NIP 1234567890 / admin123"
+echo "  - Mahasiswa: NIM 2024001 / password"
 echo ""
-echo "Default accounts:"
-echo "   Admin: admin@siakad.ac.id / admin123"
-echo "   Mahasiswa: midel@siakad.ac.id / password"
-echo "   Dosen PA: ahmad.pa@dosen.ac.id / password"
-echo ""
+echo "=================================================="
