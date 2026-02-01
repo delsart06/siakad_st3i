@@ -231,17 +231,29 @@ const Sidebar = () => {
 
       {/* User Info & Logout */}
       <div className="p-4 border-t border-indigo-800">
-        <div className="flex items-center gap-3 mb-3 px-2">
-          <div className="w-9 h-9 bg-indigo-700 rounded-full flex items-center justify-center">
-            <span className="text-sm font-medium">
-              {user?.nama?.charAt(0).toUpperCase()}
-            </span>
+        <Link
+          to="/profil"
+          className="flex items-center gap-3 mb-3 px-2 py-2 rounded-lg hover:bg-indigo-800 transition-colors cursor-pointer"
+          data-testid="sidebar-profil"
+        >
+          <div className="w-9 h-9 bg-indigo-700 rounded-full flex items-center justify-center overflow-hidden">
+            {user?.foto_profil ? (
+              <img 
+                src={`${process.env.REACT_APP_BACKEND_URL}${user.foto_profil}`} 
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-sm font-medium">
+                {user?.nama?.charAt(0).toUpperCase()}
+              </span>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{user?.nama}</p>
             <p className="text-xs text-indigo-300 capitalize">{user?.role}</p>
           </div>
-        </div>
+        </Link>
         <button
           onClick={logout}
           className="sidebar-link w-full text-red-300 hover:bg-red-900/30"
