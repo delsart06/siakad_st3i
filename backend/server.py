@@ -1375,8 +1375,12 @@ async def create_mahasiswa(
     data: MahasiswaCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Check management access
+    check_management_access(current_user)
+    
+    # Check if user can access the target prodi
+    if not await can_access_prodi(current_user, data.prodi_id):
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke program studi ini")
     
     # Check if NIM exists
     existing = await db.mahasiswa.find_one({"nim": data.nim})
@@ -1417,8 +1421,16 @@ async def update_mahasiswa(
     data: MahasiswaBase,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Check management access
+    check_management_access(current_user)
+    
+    # Check if user can access the mahasiswa's prodi
+    mhs = await db.mahasiswa.find_one({"id": item_id}, {"_id": 0})
+    if not mhs:
+        raise HTTPException(status_code=404, detail="Mahasiswa tidak ditemukan")
+    
+    if not await can_access_prodi(current_user, mhs["prodi_id"]):
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke mahasiswa ini")
     
     await db.mahasiswa.update_one({"id": item_id}, {"$set": data.model_dump()})
     updated = await db.mahasiswa.find_one({"id": item_id}, {"_id": 0})
