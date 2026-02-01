@@ -604,12 +604,36 @@ async def register(user: UserCreate):
 
 @auth_router.post("/login", response_model=TokenResponse)
 async def login(credentials: UserLogin):
-    user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
+    # Login menggunakan NIM/NIDN/NIP
+    user_id_input = credentials.user_id.strip()
+    
+    # Cari user berdasarkan user_id_number (NIM/NIDN/NIP)
+    user = await db.users.find_one({"user_id_number": user_id_input}, {"_id": 0})
+    
+    # Fallback: coba cari di mahasiswa berdasarkan NIM
     if not user:
-        raise HTTPException(status_code=401, detail="Email atau password salah")
+        mahasiswa = await db.mahasiswa.find_one({"nim": user_id_input}, {"_id": 0})
+        if mahasiswa and mahasiswa.get("user_id"):
+            user = await db.users.find_one({"id": mahasiswa["user_id"]}, {"_id": 0})
+            # Update user_id_number jika belum ada
+            if user and not user.get("user_id_number"):
+                await db.users.update_one({"id": user["id"]}, {"$set": {"user_id_number": user_id_input}})
+                user["user_id_number"] = user_id_input
+    
+    # Fallback: coba cari di dosen berdasarkan NIDN
+    if not user:
+        dosen = await db.dosen.find_one({"nidn": user_id_input}, {"_id": 0})
+        if dosen and dosen.get("user_id"):
+            user = await db.users.find_one({"id": dosen["user_id"]}, {"_id": 0})
+            if user and not user.get("user_id_number"):
+                await db.users.update_one({"id": user["id"]}, {"$set": {"user_id_number": user_id_input}})
+                user["user_id_number"] = user_id_input
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="NIM/NIDN/NIP atau password salah")
     
     if not verify_password(credentials.password, user["password"]):
-        raise HTTPException(status_code=401, detail="Email atau password salah")
+        raise HTTPException(status_code=401, detail="NIM/NIDN/NIP atau password salah")
     
     if not user.get("is_active", True):
         raise HTTPException(status_code=401, detail="Akun tidak aktif")
@@ -623,7 +647,9 @@ async def login(credentials: UserLogin):
             email=user["email"],
             nama=user["nama"],
             role=user["role"],
-            is_active=user.get("is_active", True)
+            is_active=user.get("is_active", True),
+            user_id_number=user.get("user_id_number"),
+            foto_profil=user.get("foto_profil")
         )
     )
 
@@ -634,7 +660,9 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         email=current_user["email"],
         nama=current_user["nama"],
         role=current_user["role"],
-        is_active=current_user.get("is_active", True)
+        is_active=current_user.get("is_active", True),
+        user_id_number=current_user.get("user_id_number"),
+        foto_profil=current_user.get("foto_profil")
     )
 
 @auth_router.put("/change-password")
@@ -652,6 +680,268 @@ async def change_password(
         {"$set": {"password": hash_password(new_password)}}
     )
     return {"message": "Password berhasil diubah"}
+
+# ----- Lupa Password Request (untuk approval admin) -----
+@auth_router.post("/forgot-password-request")
+async def create_forgot_password_request(data: PasswordResetRequestCreate):
+    user_id_input = data.user_id_number.strip()
+    
+    # Cari user
+    user = await db.users.find_one({"user_id_number": user_id_input}, {"_id": 0})
+    
+    # Fallback ke mahasiswa
+    prodi_id = None
+    if not user:
+        mahasiswa = await db.mahasiswa.find_one({"nim": user_id_input}, {"_id": 0})
+        if mahasiswa and mahasiswa.get("user_id"):
+            user = await db.users.find_one({"id": mahasiswa["user_id"]}, {"_id": 0})
+            prodi_id = mahasiswa.get("prodi_id")
+    
+    # Fallback ke dosen
+    if not user:
+        dosen = await db.dosen.find_one({"nidn": user_id_input}, {"_id": 0})
+        if dosen and dosen.get("user_id"):
+            user = await db.users.find_one({"id": dosen["user_id"]}, {"_id": 0})
+            # Cari prodi dari kelas yang diajar
+            kelas = await db.kelas.find_one({"dosen_id": dosen["id"]}, {"_id": 0})
+            if kelas:
+                mk = await db.mata_kuliah.find_one({"id": kelas.get("mata_kuliah_id")}, {"_id": 0})
+                if mk:
+                    kurikulum = await db.kurikulum.find_one({"id": mk.get("kurikulum_id")}, {"_id": 0})
+                    if kurikulum:
+                        prodi_id = kurikulum.get("prodi_id")
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User dengan NIM/NIDN/NIP tersebut tidak ditemukan")
+    
+    # Cek apakah sudah ada request pending
+    existing = await db.password_reset_requests.find_one({
+        "user_id": user["id"],
+        "status": "pending"
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Masih ada pengajuan yang belum diproses")
+    
+    # Hash password baru
+    hashed_password = hash_password(data.password_baru)
+    
+    doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "user_id_number": user_id_input,
+        "prodi_id": prodi_id,
+        "password_baru_hash": hashed_password,
+        "status": "pending",
+        "catatan_admin": None,
+        "reviewed_by": None,
+        "reviewed_at": None,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.password_reset_requests.insert_one(doc)
+    
+    return {"message": "Pengajuan reset password berhasil dikirim. Menunggu persetujuan admin."}
+
+@auth_router.get("/forgot-password-requests")
+async def get_password_reset_requests(
+    status: Optional[str] = "pending",
+    prodi_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    query = {}
+    if status:
+        query["status"] = status
+    if prodi_id:
+        query["prodi_id"] = prodi_id
+    
+    requests = await db.password_reset_requests.find(query, {"_id": 0}).sort("created_at", -1).to_list(200)
+    
+    result = []
+    for req in requests:
+        user = await db.users.find_one({"id": req["user_id"]}, {"_id": 0})
+        prodi = await db.prodi.find_one({"id": req.get("prodi_id")}, {"_id": 0}) if req.get("prodi_id") else None
+        result.append({
+            **req,
+            "user_nama": user["nama"] if user else None,
+            "prodi_nama": prodi["nama"] if prodi else None
+        })
+    
+    return result
+
+@auth_router.put("/forgot-password-requests/{request_id}/review")
+async def review_password_reset_request(
+    request_id: str,
+    action: str,
+    catatan: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    if action not in ["approve", "reject"]:
+        raise HTTPException(status_code=400, detail="Action harus 'approve' atau 'reject'")
+    
+    request = await db.password_reset_requests.find_one({"id": request_id}, {"_id": 0})
+    if not request:
+        raise HTTPException(status_code=404, detail="Pengajuan tidak ditemukan")
+    
+    if request["status"] != "pending":
+        raise HTTPException(status_code=400, detail="Pengajuan sudah diproses")
+    
+    new_status = "approved" if action == "approve" else "rejected"
+    
+    await db.password_reset_requests.update_one(
+        {"id": request_id},
+        {"$set": {
+            "status": new_status,
+            "catatan_admin": catatan,
+            "reviewed_by": current_user["id"],
+            "reviewed_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Jika approved, update password user
+    if action == "approve":
+        await db.users.update_one(
+            {"id": request["user_id"]},
+            {"$set": {"password": request["password_baru_hash"]}}
+        )
+    
+    return {"message": f"Pengajuan berhasil di{new_status}"}
+
+# ----- Foto Profil -----
+@auth_router.post("/upload-foto-profil")
+async def upload_foto_profil(
+    foto: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    # Cek apakah sudah ada request pending
+    existing = await db.foto_profil_requests.find_one({
+        "user_id": current_user["id"],
+        "status": "pending"
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Masih ada pengajuan foto yang belum diproses")
+    
+    # Simpan foto
+    user_dir = UPLOAD_DIR.parent / "foto_profil" / current_user["id"]
+    user_dir.mkdir(parents=True, exist_ok=True)
+    
+    ext = Path(foto.filename).suffix if foto.filename else ".jpg"
+    filename = f"pending_{uuid.uuid4().hex[:8]}{ext}"
+    file_path = user_dir / filename
+    
+    async with aiofiles.open(file_path, 'wb') as f:
+        content = await foto.read()
+        await f.write(content)
+    
+    foto_path = f"/uploads/foto_profil/{current_user['id']}/{filename}"
+    
+    # Dapatkan prodi_id
+    prodi_id = None
+    if current_user["role"] == "mahasiswa":
+        mhs = await db.mahasiswa.find_one({"user_id": current_user["id"]}, {"_id": 0})
+        if mhs:
+            prodi_id = mhs.get("prodi_id")
+    
+    doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "user_id_number": current_user.get("user_id_number"),
+        "prodi_id": prodi_id,
+        "foto_lama": current_user.get("foto_profil"),
+        "foto_baru": foto_path,
+        "status": "pending",
+        "catatan_admin": None,
+        "reviewed_by": None,
+        "reviewed_at": None,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.foto_profil_requests.insert_one(doc)
+    
+    return {"message": "Pengajuan ganti foto profil berhasil. Menunggu persetujuan admin."}
+
+@auth_router.get("/foto-profil-requests")
+async def get_foto_profil_requests(
+    status: Optional[str] = "pending",
+    prodi_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    query = {}
+    if status:
+        query["status"] = status
+    if prodi_id:
+        query["prodi_id"] = prodi_id
+    
+    requests = await db.foto_profil_requests.find(query, {"_id": 0}).sort("created_at", -1).to_list(200)
+    
+    result = []
+    for req in requests:
+        user = await db.users.find_one({"id": req["user_id"]}, {"_id": 0})
+        prodi = await db.prodi.find_one({"id": req.get("prodi_id")}, {"_id": 0}) if req.get("prodi_id") else None
+        result.append({
+            **req,
+            "user_nama": user["nama"] if user else None,
+            "prodi_nama": prodi["nama"] if prodi else None
+        })
+    
+    return result
+
+@auth_router.put("/foto-profil-requests/{request_id}/review")
+async def review_foto_profil_request(
+    request_id: str,
+    action: str,
+    catatan: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    if action not in ["approve", "reject"]:
+        raise HTTPException(status_code=400, detail="Action harus 'approve' atau 'reject'")
+    
+    request = await db.foto_profil_requests.find_one({"id": request_id}, {"_id": 0})
+    if not request:
+        raise HTTPException(status_code=404, detail="Pengajuan tidak ditemukan")
+    
+    if request["status"] != "pending":
+        raise HTTPException(status_code=400, detail="Pengajuan sudah diproses")
+    
+    new_status = "approved" if action == "approve" else "rejected"
+    
+    await db.foto_profil_requests.update_one(
+        {"id": request_id},
+        {"$set": {
+            "status": new_status,
+            "catatan_admin": catatan,
+            "reviewed_by": current_user["id"],
+            "reviewed_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Jika approved, update foto profil user
+    if action == "approve":
+        await db.users.update_one(
+            {"id": request["user_id"]},
+            {"$set": {"foto_profil": request["foto_baru"]}}
+        )
+    
+    return {"message": f"Pengajuan berhasil di{new_status}"}
+
+@auth_router.get("/my-foto-profil-requests")
+async def get_my_foto_profil_requests(current_user: dict = Depends(get_current_user)):
+    requests = await db.foto_profil_requests.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(10)
+    return requests
 
 # ==================== MASTER DATA ROUTES ====================
 
