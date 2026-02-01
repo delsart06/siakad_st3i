@@ -180,14 +180,17 @@ const Sidebar = () => {
             ))}
 
             {/* Users Management */}
-            <Link
-              to="/users"
-              className={`sidebar-link ${isActive('/users') ? 'active' : ''}`}
-              data-testid="sidebar-users"
-            >
-              <Users className="w-5 h-5" />
-              <span>Manajemen User</span>
-            </Link>
+            {userManagementMenu.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`sidebar-link ${isActive(item.path) ? 'active' : ''}`}
+                data-testid={`sidebar-${item.path.replace(/\//g, '-')}`}
+              >
+                <item.icon className="w-5 h-5" />
+                <span>{item.label}</span>
+              </Link>
+            ))}
           </>
         )}
 
