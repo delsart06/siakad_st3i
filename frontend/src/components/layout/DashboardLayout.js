@@ -46,7 +46,7 @@ const DashboardLayout = () => {
     return <Navigate to="/login" replace />;
   }
 
-  const pageTitle = pageTitles[location.pathname] || 'SIAKAD';
+  const pageTitle = pageTitles[location.pathname] || 'SIA ST3I';
 
   return (
     <div className="flex h-screen bg-slate-50" data-testid="dashboard-layout">

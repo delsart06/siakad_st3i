@@ -190,7 +190,7 @@ const KHSPdf = ({ mahasiswa, tahunAkademik, khsData }) => {
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>UNIVERSITAS SIAKAD</Text>
+          <Text style={styles.title}>SEKOLAH TINGGI TEOLOGI TRANSFORMASI INDONESIA</Text>
           <Text style={styles.subtitle}>KARTU HASIL STUDI (KHS)</Text>
           <Text style={styles.subtitle}>
             {tahunAkademik?.tahun || '-'} - Semester {tahunAkademik?.semester || '-'}

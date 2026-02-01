@@ -50,9 +50,9 @@ const Login = () => {
           <div className="mx-auto w-16 h-16 bg-[#1e1b4b] rounded-2xl flex items-center justify-center mb-4">
             <GraduationCap className="w-9 h-9 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold text-slate-800">SIAKAD</CardTitle>
+          <CardTitle className="text-2xl font-bold text-slate-800">SIA ST3I</CardTitle>
           <CardDescription className="text-slate-500">
-            Sistem Informasi Akademik
+            Sistem Informasi Akademik Sekolah Tinggi Teologi Transformasi Indonesia
           </CardDescription>
         </CardHeader>
         <CardContent>

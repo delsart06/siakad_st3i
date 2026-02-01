@@ -120,7 +120,7 @@ const Sidebar = () => {
             <GraduationCap className="w-6 h-6 text-[#1e1b4b]" />
           </div>
           <div>
-            <h1 className="font-bold text-lg tracking-tight">SIAKAD</h1>
+            <h1 className="font-bold text-lg tracking-tight">SIA ST3I</h1>
             <p className="text-xs text-indigo-300">Sistem Informasi Akademik</p>
           </div>
         </Link>

@@ -331,7 +331,7 @@ const TranskripPage = () => {
         <div ref={printRef}>
           <div className="header">
             <h1>TRANSKRIP AKADEMIK</h1>
-            <p>Sistem Informasi Akademik (SIAKAD)</p>
+            <p>Sistem Informasi Akademik (SIA ST3I)</p>
           </div>
           
           <div className="student-info">
