@@ -3425,8 +3425,12 @@ api_router.include_router(akademik_router)
 api_router.include_router(mahasiswa_router)
 api_router.include_router(dosen_router)
 api_router.include_router(keuangan_router)
+api_router.include_router(biodata_router)
 
 app.include_router(api_router)
+
+# Serve uploaded files
+app.mount("/uploads", StaticFiles(directory=str(Path(__file__).parent / "uploads")), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,
