@@ -21,7 +21,7 @@ import {
 } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Loader2, Users, Power, KeyRound, Copy, CheckCircle, ExternalLink } from 'lucide-react';
+import { Loader2, Users, Power, KeyRound, Copy, CheckCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 const UserManagement = () => {
@@ -65,15 +65,15 @@ const UserManagement = () => {
     setIsResetDialogOpen(true);
   };
 
-  const handleGenerateResetToken = async () => {
+  const handleGenerateNewPassword = async () => {
     if (!selectedUser) return;
     setGenerating(true);
     try {
-      const response = await usersAPI.generateResetToken(selectedUser.id);
+      const response = await usersAPI.generateNewPassword(selectedUser.id);
       setResetResult(response.data);
-      toast.success('Token reset password berhasil dibuat');
+      toast.success('Password baru berhasil dibuat');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Gagal generate token');
+      toast.error(error.response?.data?.detail || 'Gagal generate password');
     } finally {
       setGenerating(false);
     }
@@ -82,14 +82,8 @@ const UserManagement = () => {
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
-    toast.success('Link berhasil disalin');
+    toast.success('Password berhasil disalin');
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const getFullResetUrl = () => {
-    if (!resetResult) return '';
-    const baseUrl = window.location.origin;
-    return `${baseUrl}/reset-password?token=${resetResult.reset_token}`;
   };
 
   const getRoleBadge = (role) => {
@@ -188,7 +182,7 @@ const UserManagement = () => {
               Reset Password User
             </DialogTitle>
             <DialogDescription>
-              Generate link reset password untuk user ini
+              Generate password baru untuk user ini
             </DialogDescription>
           </DialogHeader>
           
@@ -215,14 +209,16 @@ const UserManagement = () => {
               {/* Generate Button or Result */}
               {!resetResult ? (
                 <div className="text-center py-4">
-                  <p className="text-sm text-slate-600 mb-4">
-                    Klik tombol di bawah untuk generate link reset password.
-                    Link akan berlaku selama 24 jam.
-                  </p>
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+                    <div className="flex items-center gap-2 text-yellow-700">
+                      <AlertTriangle className="w-4 h-4" />
+                      <span className="text-sm">Password lama akan diganti dengan password baru</span>
+                    </div>
+                  </div>
                   <Button 
-                    onClick={handleGenerateResetToken}
+                    onClick={handleGenerateNewPassword}
                     disabled={generating}
-                    data-testid="btn-generate-token"
+                    data-testid="btn-generate-password"
                   >
                     {generating ? (
                       <>
@@ -232,7 +228,7 @@ const UserManagement = () => {
                     ) : (
                       <>
                         <KeyRound className="w-4 h-4 mr-2" />
-                        Generate Link Reset
+                        Generate Password Baru
                       </>
                     )}
                   </Button>
@@ -241,48 +237,33 @@ const UserManagement = () => {
                 <div className="space-y-4">
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                     <div className="flex items-center gap-2 text-green-700 mb-2">
-                      <CheckCircle className="w-4 h-4" />
-                      <span className="font-medium">Link Reset Berhasil Dibuat!</span>
+                      <CheckCircle className="w-5 h-5" />
+                      <span className="font-medium">Password Berhasil Direset!</span>
                     </div>
-                    <p className="text-sm text-green-600">
-                      Berlaku hingga: {resetResult.expires_in}
-                    </p>
                   </div>
 
                   <div>
-                    <Label className="text-slate-500">Link Reset Password:</Label>
+                    <Label className="text-slate-500">Password Baru:</Label>
                     <div className="flex gap-2 mt-1">
                       <Input 
-                        value={getFullResetUrl()} 
+                        value={resetResult.new_password} 
                         readOnly 
-                        className="text-xs"
-                        data-testid="reset-link-input"
+                        className="text-center text-2xl font-mono tracking-widest"
+                        data-testid="new-password-input"
                       />
                       <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => copyToClipboard(getFullResetUrl())}
-                        data-testid="btn-copy-link"
+                        onClick={() => copyToClipboard(resetResult.new_password)}
+                        data-testid="btn-copy-password"
                       >
                         {copied ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                       </Button>
                     </div>
                   </div>
 
-                  <div className="text-center">
-                    <a 
-                      href={getFullResetUrl()} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline inline-flex items-center gap-1"
-                    >
-                      Buka Link <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-
                   <p className="text-xs text-slate-500 text-center">
-                    Bagikan link ini kepada user untuk mereset password mereka.
-                    Jangan bagikan link ini kepada orang lain.
+                    Catat password ini dan berikan kepada user. Password tidak akan ditampilkan lagi setelah dialog ditutup.
                   </p>
                 </div>
               )}
