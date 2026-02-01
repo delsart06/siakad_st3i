@@ -198,6 +198,172 @@ const Sidebar = () => {
           </>
         )}
 
+        {/* Rektor/Dekan/Kaprodi Management Menus - Can view data based on their access */}
+        {['rektor', 'dekan', 'kaprodi'].includes(user?.role) && (
+          <>
+            {/* Master Data - View only for management roles */}
+            <Collapsible
+              open={openMenus.includes('master')}
+              onOpenChange={() => toggleMenu('master')}
+            >
+              <CollapsibleTrigger
+                className={`sidebar-link w-full justify-between ${
+                  isParentActive(['/master']) ? 'bg-indigo-900/50' : ''
+                }`}
+                data-testid="sidebar-master"
+              >
+                <div className="flex items-center gap-3">
+                  <Settings className="w-5 h-5" />
+                  <span>Master Data</span>
+                </div>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-200 ${
+                    openMenus.includes('master') ? 'rotate-180' : ''
+                  }`}
+                />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pl-4 space-y-1 mt-1">
+                {isFullAccess && (
+                  <>
+                    <Link to="/master/tahun-akademik" className={`sidebar-link text-sm ${isActive('/master/tahun-akademik') ? 'active' : ''}`}>
+                      <Calendar className="w-4 h-4" />
+                      <span>Tahun Akademik</span>
+                    </Link>
+                    <Link to="/master/fakultas" className={`sidebar-link text-sm ${isActive('/master/fakultas') ? 'active' : ''}`}>
+                      <Building2 className="w-4 h-4" />
+                      <span>Fakultas</span>
+                    </Link>
+                  </>
+                )}
+                <Link to="/master/prodi" className={`sidebar-link text-sm ${isActive('/master/prodi') ? 'active' : ''}`}>
+                  <School className="w-4 h-4" />
+                  <span>Program Studi</span>
+                </Link>
+                <Link to="/master/mahasiswa" className={`sidebar-link text-sm ${isActive('/master/mahasiswa') ? 'active' : ''}`}>
+                  <GraduationCap className="w-4 h-4" />
+                  <span>Mahasiswa</span>
+                </Link>
+                <Link to="/master/dosen" className={`sidebar-link text-sm ${isActive('/master/dosen') ? 'active' : ''}`}>
+                  <UserCircle className="w-4 h-4" />
+                  <span>Dosen</span>
+                </Link>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Akademik */}
+            <Collapsible
+              open={openMenus.includes('akademik')}
+              onOpenChange={() => toggleMenu('akademik')}
+            >
+              <CollapsibleTrigger
+                className={`sidebar-link w-full justify-between ${
+                  isParentActive(['/akademik']) ? 'bg-indigo-900/50' : ''
+                }`}
+                data-testid="sidebar-akademik"
+              >
+                <div className="flex items-center gap-3">
+                  <ClipboardList className="w-5 h-5" />
+                  <span>Akademik</span>
+                </div>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-200 ${
+                    openMenus.includes('akademik') ? 'rotate-180' : ''
+                  }`}
+                />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pl-4 space-y-1 mt-1">
+                <Link to="/akademik/kelas" className={`sidebar-link text-sm ${isActive('/akademik/kelas') ? 'active' : ''}`}>
+                  <BookOpen className="w-4 h-4" />
+                  <span>Penawaran Kelas</span>
+                </Link>
+                <Link to="/akademik/jadwal" className={`sidebar-link text-sm ${isActive('/akademik/jadwal') ? 'active' : ''}`}>
+                  <Calendar className="w-4 h-4" />
+                  <span>Jadwal Kuliah</span>
+                </Link>
+                <Link to="/akademik/krs" className={`sidebar-link text-sm ${isActive('/akademik/krs') ? 'active' : ''}`}>
+                  <ClipboardList className="w-4 h-4" />
+                  <span>Validasi KRS</span>
+                </Link>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Keuangan */}
+            <Collapsible
+              open={openMenus.includes('keuangan')}
+              onOpenChange={() => toggleMenu('keuangan')}
+            >
+              <CollapsibleTrigger
+                className={`sidebar-link w-full justify-between ${
+                  isParentActive(['/keuangan']) ? 'bg-indigo-900/50' : ''
+                }`}
+                data-testid="sidebar-keuangan"
+              >
+                <div className="flex items-center gap-3">
+                  <Wallet className="w-5 h-5" />
+                  <span>Keuangan</span>
+                </div>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-200 ${
+                    openMenus.includes('keuangan') ? 'rotate-180' : ''
+                  }`}
+                />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pl-4 space-y-1 mt-1">
+                <Link to="/keuangan/tagihan" className={`sidebar-link text-sm ${isActive('/keuangan/tagihan') ? 'active' : ''}`}>
+                  <CreditCard className="w-4 h-4" />
+                  <span>Manajemen Tagihan</span>
+                </Link>
+                <Link to="/keuangan/pembayaran" className={`sidebar-link text-sm ${isActive('/keuangan/pembayaran') ? 'active' : ''}`}>
+                  <FileText className="w-4 h-4" />
+                  <span>Verifikasi Pembayaran</span>
+                </Link>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Biodata */}
+            <Collapsible
+              open={openMenus.includes('biodata')}
+              onOpenChange={() => toggleMenu('biodata')}
+            >
+              <CollapsibleTrigger
+                className={`sidebar-link w-full justify-between ${
+                  isParentActive(['/biodata']) ? 'bg-indigo-900/50' : ''
+                }`}
+                data-testid="sidebar-biodata"
+              >
+                <div className="flex items-center gap-3">
+                  <UserCheck className="w-5 h-5" />
+                  <span>Biodata</span>
+                </div>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-200 ${
+                    openMenus.includes('biodata') ? 'rotate-180' : ''
+                  }`}
+                />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pl-4 space-y-1 mt-1">
+                <Link to="/biodata/verifikasi" className={`sidebar-link text-sm ${isActive('/biodata/verifikasi') ? 'active' : ''}`}>
+                  <UserCheck className="w-4 h-4" />
+                  <span>Verifikasi Perubahan</span>
+                </Link>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* User Management - Only for full access roles */}
+            {isFullAccess && userManagementMenu.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`sidebar-link ${isActive(item.path) ? 'active' : ''}`}
+                data-testid={`sidebar-${item.path.replace(/\//g, '-')}`}
+              >
+                <item.icon className="w-5 h-5" />
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </>
+        )}
+
         {/* Mahasiswa Menus */}
         {user?.role === 'mahasiswa' && (
           <>
