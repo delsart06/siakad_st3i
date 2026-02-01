@@ -43,6 +43,10 @@ const Sidebar = () => {
     );
   };
 
+  // Check if user has management role (admin, rektor, dekan, kaprodi)
+  const isManagement = ['admin', 'rektor', 'dekan', 'kaprodi'].includes(user?.role);
+  const isFullAccess = ['admin', 'rektor'].includes(user?.role);
+
   const adminMenus = [
     {
       id: 'master',
