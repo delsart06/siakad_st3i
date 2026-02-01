@@ -46,6 +46,11 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
   - Tagihan UKT (CRUD, batch create per prodi)
   - Pembayaran UKT (create, verify/reject)
   - Rekap Keuangan (summary totals)
+- ✅ **Biodata APIs:**
+  - Biodata Mahasiswa (CRUD)
+  - Change Request (create with file upload, list, detail)
+  - Review (approve/reject with notes)
+  - File serving (/uploads/biodata/...)
 - ✅ Dashboard Stats API
 - ✅ **Mahasiswa Portal APIs:**
   - Profile mahasiswa (with dosen_pa_nama)
@@ -92,6 +97,7 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
   - **Jadwal Page** - Lihat jadwal kuliah mingguan dengan group by hari
   - **Presensi Page** - Rekap kehadiran per mata kuliah dengan warning <75%
   - **Keuangan Page** - Lihat tagihan UKT, bayar cicilan, riwayat pembayaran
+  - **Biodata Page** - Isi/ubah biodata, upload dokumen pendukung, riwayat perubahan
 - ✅ **Portal Dosen:**
   - **Kelas Saya** - Daftar kelas yang diampu dengan stats (Total Kelas, Mahasiswa, SKS)
   - **Daftar Mahasiswa** - Lihat mahasiswa per kelas dengan search, filter, export CSV
@@ -101,6 +107,10 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
 - ✅ **Keuangan Admin:**
   - **Manajemen Tagihan** - CRUD tagihan UKT, batch create, filter, rekap cards
   - **Verifikasi Pembayaran** - Approve/reject pembayaran mahasiswa
+- ✅ **Biodata Admin:**
+  - **Verifikasi Perubahan** - Review perubahan biodata dengan perbandingan data lama vs baru
+  - **Lihat Dokumen Pendukung** - Preview KTP, KK, Akte yang diupload
+  - **Approve/Reject** - Setujui atau tolak dengan catatan
 - ✅ **Password Reset:**
   - **Lupa Password Page** - Request reset token via email
   - **Reset Password Page** - Set new password with token validation
@@ -155,9 +165,10 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
 9. ~~Add Presensi mahasiswa (Dosen & Mahasiswa view)~~ ✅
 10. ~~Add Password Reset functionality~~ ✅
 11. ~~Add Modul Keuangan (UKT/SPP)~~ ✅
-12. Add Modul Laporan & Rekapitulasi
-13. Add Modul Monitoring & Dashboard Analytics
-14. Add Bulk import Excel for Mahasiswa/Dosen
+12. ~~Add Fitur Biodata dengan Approval System~~ ✅
+13. Add Modul Laporan & Rekapitulasi
+14. Add Modul Monitoring & Dashboard Analytics
+15. Add Bulk import Excel for Mahasiswa/Dosen
 
 ---
 
@@ -166,7 +177,7 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
 - Test Mahasiswa: budi@mahasiswa.ac.id / mahasiswa123
 - Test Mahasiswa 2: midel@siakad.ac.id / password
 - Test Dosen PA: ahmad.pa@dosen.ac.id / password
-- MongoDB collections: users, mahasiswa, dosen, fakultas, prodi, kurikulum, mata_kuliah, tahun_akademik, kelas, krs, nilai, presensi, presensi_detail, kategori_ukt, tagihan_ukt, pembayaran_ukt
+- MongoDB collections: users, mahasiswa, dosen, fakultas, prodi, kurikulum, mata_kuliah, tahun_akademik, kelas, krs, nilai, presensi, presensi_detail, kategori_ukt, tagihan_ukt, pembayaran_ukt, biodata, biodata_change_request
 - All timestamps in UTC ISO format
 - Password hashing with bcrypt
 - PDF generation using @react-pdf/renderer
@@ -190,3 +201,19 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
 - `/keuangan/pembayaran` - Admin: Verifikasi Pembayaran with approve/reject
 - `/mahasiswa/keuangan` - Student: View tagihan, make payment, view history
 - Updated Sidebar with Keuangan menu for Admin and Mahasiswa
+
+### 2026-02-01: Fitur Biodata dengan Approval System
+**Backend:**
+- Added `biodata` collection - Student personal data for graduation certificates
+- Added `biodata_change_request` collection - Track change requests with documents
+- File upload endpoint with aiofiles for KTP, KK, Akte documents
+- Static file serving via `/uploads/biodata/...`
+- Mahasiswa endpoints: Get/Create biodata, submit change request, view history
+- Admin endpoints: List change requests, view detail with comparison, approve/reject
+
+**Frontend:**
+- `/mahasiswa/biodata` - Student: View/Edit biodata, upload documents for changes, history
+- `/biodata/verifikasi` - Admin: Review changes with old vs new comparison, view documents, approve/reject
+- Form with all biodata fields (nama, TTL, NIK, alamat, orang tua, kontak)
+- Document upload preview and external link
+- Status badges and change history timeline
