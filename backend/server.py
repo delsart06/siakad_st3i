@@ -418,6 +418,59 @@ class RekapKeuanganResponse(BaseModel):
     jumlah_mahasiswa_cicilan: int
     jumlah_mahasiswa_belum_bayar: int
 
+# Biodata Mahasiswa (untuk Ijazah)
+class BiodataBase(BaseModel):
+    nama_lengkap: str
+    tempat_lahir: str
+    tanggal_lahir: str  # YYYY-MM-DD
+    nik: str
+    no_kk: str
+    jenis_kelamin: str  # L/P
+    agama: str
+    kewarganegaraan: str = "Indonesia"
+    alamat_jalan: str
+    alamat_rt: str
+    alamat_rw: str
+    alamat_kelurahan: str
+    alamat_kecamatan: str
+    alamat_kota: str
+    alamat_provinsi: str
+    alamat_kode_pos: str
+    nama_ayah: str
+    nama_ibu: str
+    no_hp: str
+    email: EmailStr
+
+class BiodataCreate(BiodataBase):
+    pass
+
+class BiodataResponse(BiodataBase):
+    id: str
+    mahasiswa_id: str
+    is_verified: bool = False
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+# Biodata Change Request
+class BiodataChangeRequestCreate(BaseModel):
+    data_baru: Dict[str, Any]  # Changed fields only
+
+class BiodataChangeRequestResponse(BaseModel):
+    id: str
+    mahasiswa_id: str
+    mahasiswa_nim: Optional[str] = None
+    mahasiswa_nama: Optional[str] = None
+    data_lama: Dict[str, Any]
+    data_baru: Dict[str, Any]
+    dokumen_ktp: Optional[str] = None
+    dokumen_kk: Optional[str] = None
+    dokumen_akte: Optional[str] = None
+    status: str = "pending"  # pending, approved, rejected
+    catatan_admin: Optional[str] = None
+    reviewed_by: Optional[str] = None
+    reviewed_at: Optional[str] = None
+    created_at: Optional[str] = None
+
 # Dashboard Stats
 class DashboardStats(BaseModel):
     total_mahasiswa: int = 0
