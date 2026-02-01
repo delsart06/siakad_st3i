@@ -205,6 +205,9 @@ export const usersAPI = {
   getAll: () => api.get('/users'),
   toggleActive: (id) => api.put(`/users/${id}/toggle-active`),
   generateNewPassword: (id) => api.post(`/users/${id}/generate-new-password`),
+  createManagementUser: (data) => api.post('/users/management', data),
+  updateRole: (id, role, prodiId = null, fakultasId = null) => 
+    api.put(`/users/${id}/update-role`, null, { params: { role, prodi_id: prodiId, fakultas_id: fakultasId } }),
 };
 
 // Keuangan (Admin)
