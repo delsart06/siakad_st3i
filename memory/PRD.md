@@ -179,11 +179,11 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
 ---
 
 ## Technical Notes
-- Default Admin: admin@siakad.ac.id / admin123
-- Test Mahasiswa: budi@mahasiswa.ac.id / mahasiswa123
-- Test Mahasiswa 2: midel@siakad.ac.id / password
-- Test Dosen PA: ahmad.pa@dosen.ac.id / password
-- MongoDB collections: users, mahasiswa, dosen, fakultas, prodi, kurikulum, mata_kuliah, tahun_akademik, kelas, krs, nilai, presensi, presensi_detail, kategori_ukt, tagihan_ukt, pembayaran_ukt, biodata, biodata_change_request
+- Default Admin: NIP 1234567890 / admin123
+- Test Mahasiswa: NIM 2024001 / password
+- Test Dosen: NIDN 0001018902 / password
+- Login menggunakan NIM/NIDN/NIP (bukan email)
+- MongoDB collections: users, mahasiswa, dosen, fakultas, prodi, kurikulum, mata_kuliah, tahun_akademik, kelas, krs, nilai, presensi, presensi_detail, kategori_ukt, tagihan_ukt, pembayaran_ukt, biodata, biodata_change_request, password_reset_requests, foto_profil_requests
 - All timestamps in UTC ISO format
 - Password hashing with bcrypt
 - PDF generation using @react-pdf/renderer
