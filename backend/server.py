@@ -40,6 +40,11 @@ akademik_router = APIRouter(prefix="/akademik", tags=["Akademik"])
 mahasiswa_router = APIRouter(prefix="/mahasiswa", tags=["Mahasiswa"])
 dosen_router = APIRouter(prefix="/dosen", tags=["Dosen"])
 keuangan_router = APIRouter(prefix="/keuangan", tags=["Keuangan"])
+biodata_router = APIRouter(prefix="/biodata", tags=["Biodata"])
+
+# File upload directory
+UPLOAD_DIR = Path(__file__).parent / "uploads" / "biodata"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 security = HTTPBearer()
 
