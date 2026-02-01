@@ -29,6 +29,8 @@ import Presensi from './pages/dosen/Presensi';
 import ManajemenTagihan from './pages/keuangan/ManajemenTagihan';
 import VerifikasiPembayaran from './pages/keuangan/VerifikasiPembayaran';
 import KeuanganPage from './pages/mahasiswa/KeuanganPage';
+import BiodataPage from './pages/mahasiswa/BiodataPage';
+import VerifikasiBiodata from './pages/biodata/VerifikasiBiodata';
 import './App.css';
 
 function App() {
@@ -65,6 +67,9 @@ function App() {
             <Route path="/keuangan/tagihan" element={<ManajemenTagihan />} />
             <Route path="/keuangan/pembayaran" element={<VerifikasiPembayaran />} />
             
+            {/* Biodata (Admin) */}
+            <Route path="/biodata/verifikasi" element={<VerifikasiBiodata />} />
+            
             {/* Mahasiswa Portal */}
             <Route path="/mahasiswa/krs" element={<KRSPage />} />
             <Route path="/mahasiswa/khs" element={<KHSPage />} />
@@ -72,6 +77,7 @@ function App() {
             <Route path="/mahasiswa/jadwal" element={<JadwalPage />} />
             <Route path="/mahasiswa/presensi" element={<PresensiPage />} />
             <Route path="/mahasiswa/keuangan" element={<KeuanganPage />} />
+            <Route path="/mahasiswa/biodata" element={<BiodataPage />} />
             
             {/* Dosen Portal */}
             <Route path="/dosen/kelas" element={<KelasSaya />} />
