@@ -257,7 +257,7 @@ const BiodataPage = () => {
         <Alert className="border-blue-200 bg-blue-50">
           <User className="h-4 w-4 text-blue-600" />
           <AlertDescription className="text-blue-800">
-            Anda belum mengisi biodata. Silakan klik tombol "Isi Biodata" untuk melengkapi data pribadi Anda.
+            Anda belum mengisi biodata. Silakan klik tombol &quot;Isi Biodata&quot; untuk melengkapi data pribadi Anda.
           </AlertDescription>
         </Alert>
       )}
