@@ -169,9 +169,12 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
 10. ~~Add Password Reset functionality~~ ✅
 11. ~~Add Modul Keuangan (UKT/SPP)~~ ✅
 12. ~~Add Fitur Biodata dengan Approval System~~ ✅
-13. Add Modul Laporan & Rekapitulasi
-14. Add Modul Monitoring & Dashboard Analytics
-15. Add Bulk import Excel for Mahasiswa/Dosen
+13. ~~Login dengan NIM/NIDN/NIP~~ ✅
+14. ~~Lupa Password dengan Approval Admin~~ ✅
+15. ~~Ganti Foto Profil dengan Approval Admin~~ ✅
+16. Add Modul Laporan & Rekapitulasi
+17. Add Modul Monitoring & Dashboard Analytics
+18. Add Bulk import Excel for Mahasiswa/Dosen
 
 ---
 
