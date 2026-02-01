@@ -60,12 +60,14 @@ class UserBase(BaseModel):
     email: EmailStr
     nama: str
     role: str  # admin, dosen, mahasiswa
+    user_id_number: Optional[str] = None  # NIM/NIDN/NIP
+    foto_profil: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    user_id: str  # NIM/NIDN/NIP
     password: str
 
 class UserResponse(UserBase):
@@ -76,6 +78,40 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+
+# Password Reset Request (untuk approval admin)
+class PasswordResetRequestCreate(BaseModel):
+    user_id_number: str  # NIM/NIDN/NIP
+    password_baru: str
+
+class PasswordResetRequestResponse(BaseModel):
+    id: str
+    user_id: str
+    user_id_number: str
+    user_nama: Optional[str] = None
+    prodi_id: Optional[str] = None
+    prodi_nama: Optional[str] = None
+    status: str = "pending"  # pending, approved, rejected
+    catatan_admin: Optional[str] = None
+    reviewed_by: Optional[str] = None
+    reviewed_at: Optional[str] = None
+    created_at: Optional[str] = None
+
+# Foto Profil Change Request
+class FotoProfilChangeRequestResponse(BaseModel):
+    id: str
+    user_id: str
+    user_id_number: str
+    user_nama: Optional[str] = None
+    prodi_id: Optional[str] = None
+    prodi_nama: Optional[str] = None
+    foto_lama: Optional[str] = None
+    foto_baru: str
+    status: str = "pending"
+    catatan_admin: Optional[str] = None
+    reviewed_by: Optional[str] = None
+    reviewed_at: Optional[str] = None
+    created_at: Optional[str] = None
 
 # Tahun Akademik
 class TahunAkademikBase(BaseModel):
