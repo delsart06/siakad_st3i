@@ -3092,6 +3092,332 @@ async def get_rekap_keuangan(
         jumlah_mahasiswa_belum_bayar=belum_bayar_count
     )
 
+# ==================== BIODATA ENDPOINTS ====================
+
+# ----- Helper: Save uploaded file -----
+async def save_upload_file(file: UploadFile, mahasiswa_id: str, doc_type: str) -> str:
+    """Save uploaded file and return the relative path"""
+    # Create directory for mahasiswa
+    mhs_dir = UPLOAD_DIR / mahasiswa_id
+    mhs_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Generate unique filename
+    ext = Path(file.filename).suffix if file.filename else ".jpg"
+    filename = f"{doc_type}_{uuid.uuid4().hex[:8]}{ext}"
+    file_path = mhs_dir / filename
+    
+    # Save file
+    async with aiofiles.open(file_path, 'wb') as out_file:
+        content = await file.read()
+        await out_file.write(content)
+    
+    # Return relative path for storage
+    return f"/uploads/biodata/{mahasiswa_id}/{filename}"
+
+# ----- Mahasiswa: Get My Biodata -----
+@mahasiswa_router.get("/biodata")
+async def get_my_biodata(current_user: dict = Depends(get_current_user)):
+    if current_user["role"] != "mahasiswa":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    mhs = await db.mahasiswa.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not mhs:
+        raise HTTPException(status_code=404, detail="Data mahasiswa tidak ditemukan")
+    
+    biodata = await db.biodata.find_one({"mahasiswa_id": mhs["id"]}, {"_id": 0})
+    
+    # Check for pending change request
+    pending_request = await db.biodata_change_request.find_one(
+        {"mahasiswa_id": mhs["id"], "status": "pending"},
+        {"_id": 0}
+    )
+    
+    return {
+        "biodata": biodata,
+        "has_pending_request": pending_request is not None,
+        "pending_request": pending_request
+    }
+
+# ----- Mahasiswa: Create Initial Biodata -----
+@mahasiswa_router.post("/biodata")
+async def create_my_biodata(
+    data: BiodataCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "mahasiswa":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    mhs = await db.mahasiswa.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not mhs:
+        raise HTTPException(status_code=404, detail="Data mahasiswa tidak ditemukan")
+    
+    # Check if biodata already exists
+    existing = await db.biodata.find_one({"mahasiswa_id": mhs["id"]})
+    if existing:
+        raise HTTPException(status_code=400, detail="Biodata sudah ada, gunakan fitur perubahan data")
+    
+    doc = {
+        "id": str(uuid.uuid4()),
+        "mahasiswa_id": mhs["id"],
+        **data.dict(),
+        "is_verified": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.biodata.insert_one(doc)
+    
+    return {"message": "Biodata berhasil dibuat", "id": doc["id"]}
+
+# ----- Mahasiswa: Create Change Request -----
+@mahasiswa_router.post("/biodata/change-request")
+async def create_biodata_change_request(
+    data_baru: str = File(..., description="JSON string of changed data"),
+    dokumen_ktp: UploadFile = File(...),
+    dokumen_kk: UploadFile = File(...),
+    dokumen_akte: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    import json
+    
+    if current_user["role"] != "mahasiswa":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    mhs = await db.mahasiswa.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not mhs:
+        raise HTTPException(status_code=404, detail="Data mahasiswa tidak ditemukan")
+    
+    # Check for pending request
+    pending = await db.biodata_change_request.find_one(
+        {"mahasiswa_id": mhs["id"], "status": "pending"}
+    )
+    if pending:
+        raise HTTPException(status_code=400, detail="Masih ada pengajuan yang belum diproses")
+    
+    # Get current biodata
+    biodata = await db.biodata.find_one({"mahasiswa_id": mhs["id"]}, {"_id": 0})
+    if not biodata:
+        raise HTTPException(status_code=404, detail="Biodata belum ada, silakan isi biodata terlebih dahulu")
+    
+    # Parse changed data
+    try:
+        changed_data = json.loads(data_baru)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Format data tidak valid")
+    
+    # Build data_lama (only changed fields)
+    data_lama = {}
+    for key in changed_data.keys():
+        if key in biodata:
+            data_lama[key] = biodata[key]
+    
+    # Save uploaded files
+    ktp_path = await save_upload_file(dokumen_ktp, mhs["id"], "ktp")
+    kk_path = await save_upload_file(dokumen_kk, mhs["id"], "kk")
+    akte_path = await save_upload_file(dokumen_akte, mhs["id"], "akte")
+    
+    doc = {
+        "id": str(uuid.uuid4()),
+        "mahasiswa_id": mhs["id"],
+        "data_lama": data_lama,
+        "data_baru": changed_data,
+        "dokumen_ktp": ktp_path,
+        "dokumen_kk": kk_path,
+        "dokumen_akte": akte_path,
+        "status": "pending",
+        "catatan_admin": None,
+        "reviewed_by": None,
+        "reviewed_at": None,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.biodata_change_request.insert_one(doc)
+    
+    return {"message": "Pengajuan perubahan biodata berhasil diajukan", "id": doc["id"]}
+
+# ----- Mahasiswa: Get My Change Requests -----
+@mahasiswa_router.get("/biodata/change-requests")
+async def get_my_biodata_change_requests(
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "mahasiswa":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    mhs = await db.mahasiswa.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not mhs:
+        raise HTTPException(status_code=404, detail="Data mahasiswa tidak ditemukan")
+    
+    requests = await db.biodata_change_request.find(
+        {"mahasiswa_id": mhs["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    return requests
+
+# ----- Admin: Get All Biodata Change Requests -----
+@biodata_router.get("/change-requests")
+async def get_all_biodata_change_requests(
+    status: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    query = {}
+    if status:
+        query["status"] = status
+    
+    requests = await db.biodata_change_request.find(query, {"_id": 0}).sort("created_at", -1).to_list(200)
+    
+    result = []
+    for req in requests:
+        mhs = await db.mahasiswa.find_one({"id": req["mahasiswa_id"]}, {"_id": 0})
+        result.append({
+            **req,
+            "mahasiswa_nim": mhs["nim"] if mhs else None,
+            "mahasiswa_nama": mhs["nama"] if mhs else None
+        })
+    
+    return result
+
+# ----- Admin: Get Biodata Change Request Detail -----
+@biodata_router.get("/change-requests/{request_id}")
+async def get_biodata_change_request_detail(
+    request_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    request = await db.biodata_change_request.find_one({"id": request_id}, {"_id": 0})
+    if not request:
+        raise HTTPException(status_code=404, detail="Pengajuan tidak ditemukan")
+    
+    mhs = await db.mahasiswa.find_one({"id": request["mahasiswa_id"]}, {"_id": 0})
+    biodata = await db.biodata.find_one({"mahasiswa_id": request["mahasiswa_id"]}, {"_id": 0})
+    
+    return {
+        **request,
+        "mahasiswa_nim": mhs["nim"] if mhs else None,
+        "mahasiswa_nama": mhs["nama"] if mhs else None,
+        "biodata_lengkap": biodata
+    }
+
+# ----- Admin: Approve/Reject Change Request -----
+@biodata_router.put("/change-requests/{request_id}/review")
+async def review_biodata_change_request(
+    request_id: str,
+    action: str,  # approve or reject
+    catatan: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    if action not in ["approve", "reject"]:
+        raise HTTPException(status_code=400, detail="Action harus 'approve' atau 'reject'")
+    
+    request = await db.biodata_change_request.find_one({"id": request_id}, {"_id": 0})
+    if not request:
+        raise HTTPException(status_code=404, detail="Pengajuan tidak ditemukan")
+    
+    if request["status"] != "pending":
+        raise HTTPException(status_code=400, detail="Pengajuan sudah diproses")
+    
+    new_status = "approved" if action == "approve" else "rejected"
+    
+    # Update request status
+    await db.biodata_change_request.update_one(
+        {"id": request_id},
+        {"$set": {
+            "status": new_status,
+            "catatan_admin": catatan,
+            "reviewed_by": current_user["id"],
+            "reviewed_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # If approved, update biodata
+    if action == "approve":
+        await db.biodata.update_one(
+            {"mahasiswa_id": request["mahasiswa_id"]},
+            {"$set": {
+                **request["data_baru"],
+                "is_verified": True,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+    
+    return {"message": f"Pengajuan berhasil di{new_status}"}
+
+# ----- Admin: Get All Biodata -----
+@biodata_router.get("/list")
+async def get_all_biodata(
+    prodi_id: Optional[str] = None,
+    is_verified: Optional[bool] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    # Get all mahasiswa
+    mhs_query = {}
+    if prodi_id:
+        mhs_query["prodi_id"] = prodi_id
+    
+    mahasiswa_list = await db.mahasiswa.find(mhs_query, {"_id": 0}).to_list(1000)
+    mhs_ids = [m["id"] for m in mahasiswa_list]
+    mhs_map = {m["id"]: m for m in mahasiswa_list}
+    
+    # Get biodata
+    biodata_query = {"mahasiswa_id": {"$in": mhs_ids}}
+    if is_verified is not None:
+        biodata_query["is_verified"] = is_verified
+    
+    biodata_list = await db.biodata.find(biodata_query, {"_id": 0}).to_list(1000)
+    
+    result = []
+    for bio in biodata_list:
+        mhs = mhs_map.get(bio["mahasiswa_id"])
+        prodi = await db.prodi.find_one({"id": mhs.get("prodi_id")}, {"_id": 0}) if mhs else None
+        result.append({
+            **bio,
+            "mahasiswa_nim": mhs["nim"] if mhs else None,
+            "mahasiswa_nama_mhs": mhs["nama"] if mhs else None,
+            "prodi_nama": prodi["nama"] if prodi else None
+        })
+    
+    return result
+
+# ----- Admin: Get Mahasiswa Without Biodata -----
+@biodata_router.get("/mahasiswa-belum-isi")
+async def get_mahasiswa_without_biodata(
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Akses ditolak")
+    
+    # Get all active mahasiswa
+    mahasiswa_list = await db.mahasiswa.find({"status": "aktif"}, {"_id": 0}).to_list(1000)
+    
+    # Get all biodata mahasiswa_ids
+    biodata_list = await db.biodata.find({}, {"mahasiswa_id": 1, "_id": 0}).to_list(1000)
+    biodata_mhs_ids = set(b["mahasiswa_id"] for b in biodata_list)
+    
+    # Filter mahasiswa without biodata
+    result = []
+    for mhs in mahasiswa_list:
+        if mhs["id"] not in biodata_mhs_ids:
+            prodi = await db.prodi.find_one({"id": mhs.get("prodi_id")}, {"_id": 0})
+            result.append({
+                "id": mhs["id"],
+                "nim": mhs["nim"],
+                "nama": mhs["nama"],
+                "prodi_nama": prodi["nama"] if prodi else None
+            })
+    
+    return result
+
 # Include routers
 api_router.include_router(auth_router)
 api_router.include_router(master_router)
