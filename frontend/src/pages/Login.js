@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 const Login = () => {
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+  const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -25,11 +25,11 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await login(email, password);
+      await login(userId, password);
       toast.success('Login berhasil!');
       navigate('/');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Email atau password salah');
+      toast.error(error.response?.data?.detail || 'NIM/NIDN/NIP atau password salah');
     } finally {
       setLoading(false);
     }
@@ -58,16 +58,16 @@ const Login = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-700">Email</Label>
+              <Label htmlFor="userId" className="text-slate-700">NIM / NIDN / NIP</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="email@universitas.ac.id"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="userId"
+                type="text"
+                placeholder="Masukkan NIM/NIDN/NIP"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
                 required
                 className="h-11"
-                data-testid="login-email"
+                data-testid="login-userid"
               />
             </div>
             <div className="space-y-2">
@@ -95,13 +95,13 @@ const Login = () => {
             </div>
             <div className="flex items-center justify-between">
               <div></div>
-              <a 
-                href="/forgot-password" 
+              <Link 
+                to="/forgot-password" 
                 className="text-sm text-[#1e1b4b] hover:underline"
                 data-testid="forgot-password-link"
               >
                 Lupa Password?
-              </a>
+              </Link>
             </div>
             <Button 
               type="submit" 
@@ -125,7 +125,11 @@ const Login = () => {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
                 <span className="text-slate-600">Admin</span>
-                <code className="text-xs bg-slate-200 px-2 py-1 rounded">admin@siakad.ac.id / admin123</code>
+                <code className="text-xs bg-slate-200 px-2 py-1 rounded">NIP: 1234567890 / admin123</code>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
+                <span className="text-slate-600">Mahasiswa</span>
+                <code className="text-xs bg-slate-200 px-2 py-1 rounded">NIM: 2024001 / password</code>
               </div>
             </div>
           </div>
