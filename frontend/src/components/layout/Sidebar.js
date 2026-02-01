@@ -19,6 +19,7 @@ import {
   Wallet,
   CreditCard,
   UserCheck,
+  KeyRound,
 } from 'lucide-react';
 import {
   Collapsible,
