@@ -1344,11 +1344,17 @@ async def get_mahasiswa(
     status: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
+    # Check management access for listing mahasiswa
+    check_management_access(current_user)
+    
     query = {}
     if prodi_id:
         query["prodi_id"] = prodi_id
     if status:
         query["status"] = status
+    
+    # Apply role-based prodi filter
+    query = await filter_by_prodi_access(query, current_user, "prodi_id")
     
     items = await db.mahasiswa.find(query, {"_id": 0}).sort("nim", 1).to_list(1000)
     
