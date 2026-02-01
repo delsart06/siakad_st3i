@@ -89,10 +89,21 @@ const UserManagement = () => {
   const getRoleBadge = (role) => {
     const styles = {
       admin: 'bg-violet-100 text-violet-700',
+      rektor: 'bg-amber-100 text-amber-700',
+      dekan: 'bg-orange-100 text-orange-700',
+      kaprodi: 'bg-cyan-100 text-cyan-700',
       dosen: 'bg-blue-100 text-blue-700',
       mahasiswa: 'bg-emerald-100 text-emerald-700',
     };
-    return <Badge className={styles[role] || 'bg-slate-100'}>{role}</Badge>;
+    const labels = {
+      admin: 'Admin',
+      rektor: 'Rektor',
+      dekan: 'Dekan',
+      kaprodi: 'Kaprodi',
+      dosen: 'Dosen',
+      mahasiswa: 'Mahasiswa',
+    };
+    return <Badge className={styles[role] || 'bg-slate-100'}>{labels[role] || role}</Badge>;
   };
 
   if (loading) {
