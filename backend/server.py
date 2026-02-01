@@ -86,6 +86,8 @@ class UserLogin(BaseModel):
 class UserResponse(UserBase):
     id: str
     is_active: bool = True
+    prodi_id: Optional[str] = None      # For kaprodi
+    fakultas_id: Optional[str] = None   # For dekan
 
 class TokenResponse(BaseModel):
     access_token: str
