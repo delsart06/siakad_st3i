@@ -2329,10 +2329,30 @@ async def root():
 
 @api_router.get("/users", response_model=List[UserResponse])
 async def get_users(current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Check management access
+    check_management_access(current_user)
     
-    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(500)
+    # Filter users based on role access
+    query = {}
+    role = current_user.get("role")
+    
+    # For kaprodi/dekan, only show users in their accessible prodi
+    if role not in ALL_ACCESS_ROLES:
+        accessible_prodis = await get_accessible_prodi_ids(current_user)
+        if accessible_prodis is not None:
+            # Find users that belong to accessible prodi
+            # This includes mahasiswa in those prodis and their linked users
+            mhs_in_prodi = await db.mahasiswa.find({"prodi_id": {"$in": accessible_prodis}}, {"_id": 0, "user_id": 1}).to_list(1000)
+            user_ids = [m["user_id"] for m in mhs_in_prodi if m.get("user_id")]
+            
+            # Also include users with prodi_id set (kaprodi)
+            query = {"$or": [
+                {"id": {"$in": user_ids}},
+                {"prodi_id": {"$in": accessible_prodis}},
+                {"role": {"$in": ["admin", "rektor"]}}  # Always show admin/rektor for reference
+            ]}
+    
+    users = await db.users.find(query, {"_id": 0, "password": 0}).to_list(500)
     return [UserResponse(**u) for u in users]
 
 @api_router.put("/users/{user_id}/toggle-active")
@@ -2340,8 +2360,8 @@ async def toggle_user_active(
     user_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Only admin can toggle user status
+    check_admin_access(current_user)
     
     user = await db.users.find_one({"id": user_id}, {"_id": 0})
     if not user:
