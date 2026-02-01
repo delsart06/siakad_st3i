@@ -87,6 +87,12 @@ const Sidebar = () => {
     },
   ];
 
+  // Menu khusus untuk User Management (di luar collapsible)
+  const userManagementMenu = [
+    { path: '/users', label: 'Manajemen User', icon: Users },
+    { path: '/verifikasi-akun', label: 'Verifikasi Akun', icon: KeyRound },
+  ];
+
   const mahasiswaMenus = [
     { path: '/mahasiswa/krs', label: 'KRS', icon: ClipboardList },
     { path: '/mahasiswa/jadwal', label: 'Jadwal Kuliah', icon: Calendar },
