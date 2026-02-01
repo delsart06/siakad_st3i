@@ -3068,6 +3068,120 @@ async def admin_generate_new_password(
         "user_name": user.get("nama", user["email"])
     }
 
+# ----- Create Management User (Kaprodi, Dekan, Rektor) -----
+class ManagementUserCreate(BaseModel):
+    email: EmailStr
+    nama: str
+    role: str  # kaprodi, dekan, rektor
+    user_id_number: str  # NIP
+    password: str
+    prodi_id: Optional[str] = None      # Required for kaprodi
+    fakultas_id: Optional[str] = None   # Required for dekan
+
+@api_router.post("/users/management")
+async def create_management_user(
+    data: ManagementUserCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create management user (Kaprodi, Dekan, Rektor) - Admin only"""
+    check_admin_access(current_user)
+    
+    # Validate role
+    if data.role not in ["kaprodi", "dekan", "rektor"]:
+        raise HTTPException(status_code=400, detail="Role harus salah satu dari: kaprodi, dekan, rektor")
+    
+    # Validate required fields based on role
+    if data.role == "kaprodi" and not data.prodi_id:
+        raise HTTPException(status_code=400, detail="Prodi harus diisi untuk role Kaprodi")
+    
+    if data.role == "dekan" and not data.fakultas_id:
+        raise HTTPException(status_code=400, detail="Fakultas harus diisi untuk role Dekan")
+    
+    # Check if email exists
+    existing = await db.users.find_one({"$or": [
+        {"email": data.email},
+        {"user_id_number": data.user_id_number}
+    ]})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email atau NIP sudah terdaftar")
+    
+    # Verify prodi/fakultas exists
+    if data.prodi_id:
+        prodi = await db.prodi.find_one({"id": data.prodi_id})
+        if not prodi:
+            raise HTTPException(status_code=400, detail="Program studi tidak ditemukan")
+    
+    if data.fakultas_id:
+        fakultas = await db.fakultas.find_one({"id": data.fakultas_id})
+        if not fakultas:
+            raise HTTPException(status_code=400, detail="Fakultas tidak ditemukan")
+    
+    user_id = str(uuid.uuid4())
+    user_doc = {
+        "id": user_id,
+        "email": data.email,
+        "nama": data.nama,
+        "role": data.role,
+        "user_id_number": data.user_id_number,
+        "password": hash_password(data.password),
+        "is_active": True,
+        "prodi_id": data.prodi_id,
+        "fakultas_id": data.fakultas_id,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    return {
+        "id": user_id,
+        "email": data.email,
+        "nama": data.nama,
+        "role": data.role,
+        "user_id_number": data.user_id_number,
+        "prodi_id": data.prodi_id,
+        "fakultas_id": data.fakultas_id,
+        "message": f"User {data.role} berhasil dibuat"
+    }
+
+@api_router.put("/users/{user_id}/update-role")
+async def update_user_role(
+    user_id: str,
+    role: str,
+    prodi_id: Optional[str] = None,
+    fakultas_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user role - Admin only"""
+    check_admin_access(current_user)
+    
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User tidak ditemukan")
+    
+    valid_roles = ["admin", "rektor", "dekan", "kaprodi", "dosen", "mahasiswa"]
+    if role not in valid_roles:
+        raise HTTPException(status_code=400, detail=f"Role harus salah satu dari: {', '.join(valid_roles)}")
+    
+    update_data = {"role": role}
+    
+    if role == "kaprodi":
+        if not prodi_id:
+            raise HTTPException(status_code=400, detail="Prodi harus diisi untuk role Kaprodi")
+        update_data["prodi_id"] = prodi_id
+        update_data["fakultas_id"] = None
+    elif role == "dekan":
+        if not fakultas_id:
+            raise HTTPException(status_code=400, detail="Fakultas harus diisi untuk role Dekan")
+        update_data["fakultas_id"] = fakultas_id
+        update_data["prodi_id"] = None
+    else:
+        update_data["prodi_id"] = None
+        update_data["fakultas_id"] = None
+    
+    await db.users.update_one({"id": user_id}, {"$set": update_data})
+    
+    return {"message": f"Role user berhasil diubah menjadi {role}"}
+
 # ==================== KEUANGAN (FINANCE) ENDPOINTS ====================
 
 # ----- Kategori UKT -----
