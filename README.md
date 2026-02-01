@@ -7,7 +7,7 @@ Aplikasi Sistem Informasi Akademik untuk universitas berbasis web dengan fitur l
 - **Backend**: FastAPI (Python 3.9+)
 - **Frontend**: React 18 + Tailwind CSS + Shadcn UI
 - **Database**: MongoDB
-- **Authentication**: JWT
+- **Authentication**: JWT (Login dengan NIM/NIDN/NIP)
 
 ---
 
@@ -37,16 +37,18 @@ chmod +x scripts/setup_local.sh
 scripts\setup_local.bat
 ```
 
-### Setup Manual
+---
 
-#### Langkah 1: Clone Repository
+## 📖 Setup Manual
+
+### Langkah 1: Clone Repository
 
 ```bash
 git clone <your-repo-url>
 cd siakad
 ```
 
-#### Langkah 2: Setup Backend
+### Langkah 2: Setup Backend
 
 ```bash
 # Masuk ke folder backend
@@ -67,21 +69,21 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-#### Langkah 3: Setup Frontend
+### Langkah 3: Setup Frontend
 
 ```bash
 # Buka terminal baru, masuk ke folder frontend
 cd frontend
 
-# Install dependencies (gunakan yarn atau npm)
+# Install dependencies (gunakan yarn)
 yarn install
-# atau
+# atau npm
 npm install
 ```
 
-#### Langkah 4: Konfigurasi Environment
+### Langkah 4: Konfigurasi Environment
 
-**Backend** - Edit file `backend/.env`:
+**Backend** - Buat/Edit file `backend/.env`:
 ```env
 MONGO_URL=mongodb://localhost:27017
 DB_NAME=siakad
@@ -89,39 +91,41 @@ JWT_SECRET=siakad-secret-key-2024-secure
 CORS_ORIGINS=http://localhost:3000
 ```
 
-**Frontend** - Edit file `frontend/.env`:
+**Frontend** - Buat/Edit file `frontend/.env`:
 ```env
 REACT_APP_BACKEND_URL=http://localhost:8001
 ```
 
-#### Langkah 5: Jalankan MongoDB
+### Langkah 5: Jalankan MongoDB
 
 Pastikan MongoDB sudah berjalan:
 ```bash
-# Linux/Mac
+# Linux
 sudo systemctl start mongod
-# atau
+# atau langsung
 mongod
+
+# Mac (dengan Homebrew)
+brew services start mongodb-community
 
 # Windows - jalankan MongoDB Service atau:
 "C:\Program Files\MongoDB\Server\6.0\bin\mongod.exe"
 ```
 
-#### Langkah 6: Seed Database (Opsional)
+### Langkah 6: Seed Database (Data Awal)
 
-Untuk membuat data awal (admin, fakultas, prodi, dll):
 ```bash
 cd backend
 source venv/bin/activate  # atau venv\Scripts\activate di Windows
 python ../scripts/seed_data.py
 ```
 
-#### Langkah 7: Jalankan Aplikasi
+### Langkah 7: Jalankan Aplikasi
 
 **Terminal 1 - Backend:**
 ```bash
 cd backend
-source venv/bin/activate  # aktifkan venv jika belum
+source venv/bin/activate
 uvicorn server:app --host 0.0.0.0 --port 8001 --reload
 ```
 
@@ -133,20 +137,22 @@ yarn start
 npm start
 ```
 
-#### Langkah 8: Buka Aplikasi
+### Langkah 8: Buka Aplikasi
 
 - **Frontend**: http://localhost:3000
 - **Backend API Docs**: http://localhost:8001/docs
 
 ---
 
-## 👤 Akun Default
+## 👤 Akun Default (Setelah Seed Data)
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@siakad.ac.id | admin123 |
-| Dosen | dosen@siakad.ac.id | password |
-| Mahasiswa | mahasiswa@siakad.ac.id | password |
+| Role | Login (NIM/NIDN/NIP) | Password |
+|------|---------------------|----------|
+| **Admin** | `1234567890` | `admin123` |
+| **Dosen** | `0001018902` | `password` |
+| **Mahasiswa** | `2024001` | `password` |
+
+> **Note**: Login menggunakan NIM (Mahasiswa), NIDN (Dosen), atau NIP (Admin), bukan email!
 
 ---
 
@@ -157,6 +163,7 @@ siakad/
 ├── backend/
 │   ├── server.py           # Main FastAPI application
 │   ├── requirements.txt    # Python dependencies
+│   ├── uploads/            # Uploaded files (foto profil, biodata)
 │   └── .env               # Backend environment variables
 │
 ├── frontend/
@@ -172,7 +179,10 @@ siakad/
 │   │   │   ├── master/    # Master data pages
 │   │   │   ├── akademik/  # Academic pages
 │   │   │   ├── mahasiswa/ # Student portal pages
-│   │   │   └── dosen/     # Lecturer portal pages
+│   │   │   ├── dosen/     # Lecturer portal pages
+│   │   │   ├── keuangan/  # Finance pages
+│   │   │   ├── biodata/   # Biodata pages
+│   │   │   └── admin/     # Admin-specific pages
 │   │   ├── App.js         # Main app with routing
 │   │   └── index.js       # Entry point
 │   ├── package.json       # Node dependencies
@@ -191,14 +201,55 @@ siakad/
 
 ---
 
+## ✅ Fitur yang Sudah Implementasi
+
+### 🔐 Authentication
+- ✅ Login dengan NIM/NIDN/NIP (bukan email)
+- ✅ Lupa Password dengan approval admin
+- ✅ Ganti Foto Profil dengan approval admin
+- ✅ JWT Authentication
+
+### 👨‍💼 Portal Admin
+- ✅ Dashboard dengan statistik
+- ✅ Master Data (Tahun Akademik, Fakultas, Prodi, Kurikulum, Mata Kuliah)
+- ✅ Manajemen Mahasiswa & Dosen
+- ✅ Manajemen Penawaran Kelas
+- ✅ Jadwal Kuliah dengan deteksi konflik
+- ✅ Validasi KRS
+- ✅ Manajemen User
+- ✅ Verifikasi Akun (Password & Foto)
+- ✅ Manajemen Tagihan UKT
+- ✅ Verifikasi Pembayaran
+- ✅ Verifikasi Perubahan Biodata
+
+### 👨‍🎓 Portal Mahasiswa
+- ✅ Dashboard mahasiswa
+- ✅ KRS - Pengajuan mata kuliah + Cetak PDF
+- ✅ KHS - Lihat nilai semester + Cetak PDF
+- ✅ Transkrip Nilai
+- ✅ Jadwal Kuliah
+- ✅ Presensi
+- ✅ Keuangan (Tagihan & Pembayaran UKT)
+- ✅ Biodata dengan approval
+
+### 👨‍🏫 Portal Dosen
+- ✅ Dashboard dosen
+- ✅ Validasi KRS mahasiswa bimbingan (Dosen PA)
+- ✅ Kelas Saya (Jadwal Mengajar)
+- ✅ Daftar Mahasiswa per Kelas
+- ✅ Input Nilai
+- ✅ Presensi Mahasiswa
+
+---
+
 ## 🔧 Scripts Development
 
 ### Backend
 ```bash
-# Jalankan dengan auto-reload
+# Development dengan auto-reload
 uvicorn server:app --host 0.0.0.0 --port 8001 --reload
 
-# Jalankan production
+# Production
 uvicorn server:app --host 0.0.0.0 --port 8001 --workers 4
 ```
 
@@ -226,8 +277,10 @@ Setelah backend berjalan, akses dokumentasi API di:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | /api/auth/login | Login user |
+| POST | /api/auth/login | Login dengan NIM/NIDN/NIP |
 | GET | /api/auth/me | Get current user |
+| POST | /api/auth/forgot-password-request | Request reset password |
+| POST | /api/auth/upload-foto-profil | Upload foto profil baru |
 | GET | /api/master/tahun-akademik | Get all tahun akademik |
 | GET | /api/master/fakultas | Get all fakultas |
 | GET | /api/master/prodi | Get all program studi |
@@ -237,7 +290,10 @@ Setelah backend berjalan, akses dokumentasi API di:
 | GET | /api/mahasiswa/krs | Get student KRS |
 | POST | /api/mahasiswa/krs | Enroll in class |
 | GET | /api/mahasiswa/khs | Get student grades |
+| GET | /api/mahasiswa/keuangan/tagihan | Get student bills |
 | GET | /api/dosen/krs-bimbingan | Get KRS for PA validation |
+| GET | /api/keuangan/tagihan | Get all bills (admin) |
+| GET | /api/biodata/change-requests | Get biodata change requests |
 
 ---
 
@@ -245,56 +301,59 @@ Setelah backend berjalan, akses dokumentasi API di:
 
 ### MongoDB Connection Error
 ```
-Pastikan MongoDB sudah berjalan dan MONGO_URL di .env sudah benar
+Error: connect ECONNREFUSED 127.0.0.1:27017
 ```
+**Solusi**: Pastikan MongoDB sudah berjalan dan MONGO_URL di `.env` sudah benar
 
 ### CORS Error
 ```
-Pastikan CORS_ORIGINS di backend/.env sesuai dengan URL frontend
+Access to XMLHttpRequest blocked by CORS policy
 ```
+**Solusi**: Pastikan `CORS_ORIGINS` di `backend/.env` sesuai dengan URL frontend (http://localhost:3000)
 
 ### Module Not Found (Python)
 ```bash
+# Pastikan virtual environment aktif
+source venv/bin/activate  # atau venv\Scripts\activate
+
+# Install ulang dependencies
 pip install -r requirements.txt
 ```
 
 ### Module Not Found (Node)
 ```bash
+# Hapus node_modules dan install ulang
+rm -rf node_modules
 yarn install
-# atau
-npm install
 ```
 
----
+### Port Already in Use
+```bash
+# Cari proses yang menggunakan port
+# Linux/Mac:
+lsof -i :8001
+lsof -i :3000
 
-## 📝 Fitur yang Sudah Implementasi
+# Windows:
+netstat -ano | findstr :8001
+netstat -ano | findstr :3000
 
-### Admin
-- ✅ Dashboard dengan statistik
-- ✅ Manajemen Master Data (Tahun Akademik, Fakultas, Prodi, Kurikulum, Mata Kuliah)
-- ✅ Manajemen Mahasiswa & Dosen
-- ✅ Manajemen Penawaran Kelas
-- ✅ Validasi KRS
+# Kill proses tersebut
+```
 
-### Mahasiswa
-- ✅ Dashboard mahasiswa
-- ✅ KRS - Pengajuan mata kuliah + Cetak PDF
-- ✅ KHS - Lihat nilai semester + Cetak PDF
-- ✅ Transkrip Nilai
-
-### Dosen
-- ✅ Dashboard dosen
-- ✅ Validasi KRS mahasiswa bimbingan (Dosen PA)
-- ✅ Lihat kelas yang diampu
+### Login Error "NIM/NIDN/NIP atau password salah"
+1. Pastikan sudah menjalankan seed data: `python scripts/seed_data.py`
+2. Pastikan menggunakan NIM/NIDN/NIP, bukan email
+3. Cek password di tabel akun default di atas
 
 ---
 
 ## 🔮 Roadmap (Fitur Mendatang)
 
-- [ ] Input Nilai oleh Dosen
-- [ ] Jadwal Kuliah
-- [ ] Presensi Mahasiswa
-- [ ] Modul Keuangan (UKT/SPP)
+- [ ] Modul Laporan & Rekapitulasi
+- [ ] Modul Monitoring & Dashboard Analytics
+- [ ] Import Data dari Excel (Mahasiswa/Dosen/Nilai)
+- [ ] QR Code untuk verifikasi dokumen
 - [ ] Integrasi PDDIKTI
 - [ ] Notifikasi Email/WhatsApp
 
@@ -303,3 +362,17 @@ npm install
 ## 📄 License
 
 MIT License - Silakan gunakan dan modifikasi sesuai kebutuhan.
+
+---
+
+## 💡 Tips Pengembangan
+
+1. **Hot Reload**: Backend dan frontend sudah mendukung hot reload. Perubahan kode akan otomatis diterapkan.
+
+2. **Database GUI**: Gunakan [MongoDB Compass](https://www.mongodb.com/products/compass) untuk melihat/mengedit data di MongoDB.
+
+3. **API Testing**: Gunakan Swagger UI di http://localhost:8001/docs untuk testing API langsung.
+
+4. **React DevTools**: Install [React Developer Tools](https://chrome.google.com/webstore/detail/react-developer-tools) untuk debugging React.
+
+5. **Environment Variables**: Jangan commit file `.env` ke git. Gunakan `.env.example` sebagai template.
