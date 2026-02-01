@@ -754,7 +754,9 @@ async def login(credentials: UserLogin):
             role=user["role"],
             is_active=user.get("is_active", True),
             user_id_number=user.get("user_id_number"),
-            foto_profil=user.get("foto_profil")
+            foto_profil=user.get("foto_profil"),
+            prodi_id=user.get("prodi_id"),
+            fakultas_id=user.get("fakultas_id")
         )
     )
 
@@ -767,7 +769,9 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         role=current_user["role"],
         is_active=current_user.get("is_active", True),
         user_id_number=current_user.get("user_id_number"),
-        foto_profil=current_user.get("foto_profil")
+        foto_profil=current_user.get("foto_profil"),
+        prodi_id=current_user.get("prodi_id"),
+        fakultas_id=current_user.get("fakultas_id")
     )
 
 @auth_router.put("/change-password")
