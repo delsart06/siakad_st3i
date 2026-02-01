@@ -1162,6 +1162,13 @@ async def get_prodi(
     if fakultas_id:
         query["fakultas_id"] = fakultas_id
     
+    # Apply role-based filtering for management roles
+    role = current_user.get("role")
+    if role in MANAGEMENT_ROLES:
+        accessible_prodis = await get_accessible_prodi_ids(current_user)
+        if accessible_prodis is not None:  # Not full access
+            query["id"] = {"$in": accessible_prodis}
+    
     items = await db.prodi.find(query, {"_id": 0}).sort("nama", 1).to_list(100)
     
     # Add fakultas nama
@@ -1176,8 +1183,8 @@ async def create_prodi(
     data: ProdiCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Only admin can create prodi
+    check_admin_access(current_user)
     
     item_id = str(uuid.uuid4())
     doc = {**data.model_dump(), "id": item_id}
@@ -1192,8 +1199,8 @@ async def update_prodi(
     data: ProdiCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Only admin can update prodi
+    check_admin_access(current_user)
     
     await db.prodi.update_one({"id": item_id}, {"$set": data.model_dump()})
     updated = await db.prodi.find_one({"id": item_id}, {"_id": 0})
@@ -1205,8 +1212,8 @@ async def delete_prodi(
     item_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Only admin can delete prodi
+    check_admin_access(current_user)
     
     result = await db.prodi.delete_one({"id": item_id})
     if result.deleted_count == 0:
