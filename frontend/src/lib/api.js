@@ -40,6 +40,21 @@ export const authAPI = {
   me: () => api.get('/auth/me'),
   changePassword: (oldPassword, newPassword) => 
     api.put(`/auth/change-password?old_password=${oldPassword}&new_password=${newPassword}`),
+  // Forgot password dengan approval
+  forgotPasswordRequest: (data) => api.post('/auth/forgot-password-request', data),
+  getForgotPasswordRequests: (status = 'pending', prodiId = null) =>
+    api.get('/auth/forgot-password-requests', { params: { status, prodi_id: prodiId } }),
+  reviewForgotPassword: (id, action, catatan = null) =>
+    api.put(`/auth/forgot-password-requests/${id}/review`, null, { params: { action, catatan } }),
+  // Foto profil
+  uploadFotoProfil: (formData) => api.post('/auth/upload-foto-profil', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  getFotoProfilRequests: (status = 'pending', prodiId = null) =>
+    api.get('/auth/foto-profil-requests', { params: { status, prodi_id: prodiId } }),
+  reviewFotoProfil: (id, action, catatan = null) =>
+    api.put(`/auth/foto-profil-requests/${id}/review`, null, { params: { action, catatan } }),
+  getMyFotoProfilRequests: () => api.get('/auth/my-foto-profil-requests'),
 };
 
 // Dashboard
