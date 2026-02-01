@@ -38,6 +38,7 @@ export const authAPI = {
   login: (data) => api.post('/auth/login', data),
   register: (data) => api.post('/auth/register', data),
   me: () => api.get('/auth/me'),
+  myAccess: () => api.get('/auth/my-access'),
   changePassword: (oldPassword, newPassword) => 
     api.put(`/auth/change-password?old_password=${oldPassword}&new_password=${newPassword}`),
   // Forgot password dengan approval
