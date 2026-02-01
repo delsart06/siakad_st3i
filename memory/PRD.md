@@ -1,8 +1,8 @@
-# SIAKAD - Sistem Informasi Akademik
+# SIA ST3I - Sistem Informasi Akademik Sekolah Tinggi Teologi Transformasi Indonesia
 ## Product Requirements Document (PRD)
 
 ### Original Problem Statement
-Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universities with modules including:
+Build a comprehensive SIA (Sistem Informasi Akademik) for Sekolah Tinggi Teologi Transformasi Indonesia (ST3I) with modules including:
 - Master Data (Tahun Akademik, Fakultas, Program Studi, Kurikulum, Mata Kuliah, Mahasiswa, Dosen)
 - User & Access Management
 - Academic Core (KRS, Nilai, Transkrip)
@@ -228,3 +228,21 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
 - Form with all biodata fields (nama, TTL, NIK, alamat, orang tua, kontak)
 - Document upload preview and external link
 - Status badges and change history timeline
+
+### 2026-02-01: Rename Aplikasi ke SIA ST3I
+**Changes:**
+- Renamed application from "SIAKAD" to "SIA ST3I"
+- Updated browser title to "SIA ST3I - Sistem Informasi Akademik"
+- Updated Login page header with full institution name
+- Updated Sidebar brand name
+- Updated PDF documents header to "SEKOLAH TINGGI TEOLOGI TRANSFORMASI INDONESIA"
+- Updated Transkrip page footer
+
+**Files Modified:**
+- `frontend/public/index.html` - Page title
+- `frontend/src/pages/Login.js` - Login header
+- `frontend/src/components/layout/Sidebar.js` - Sidebar brand
+- `frontend/src/components/layout/DashboardLayout.js` - Fallback title
+- `frontend/src/pages/mahasiswa/TranskripPage.js` - Footer
+- `frontend/src/components/pdf/KRSPdf.js` - PDF header
+- `frontend/src/components/pdf/KHSPdf.js` - PDF header
