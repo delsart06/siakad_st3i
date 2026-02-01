@@ -776,6 +776,43 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         fakultas_id=current_user.get("fakultas_id")
     )
 
+@auth_router.get("/my-access")
+async def get_my_access(current_user: dict = Depends(get_current_user)):
+    """Get accessible prodi and fakultas based on user's role"""
+    role = current_user.get("role")
+    
+    accessible_prodis = await get_accessible_prodi_ids(current_user)
+    accessible_fakultas = await get_accessible_fakultas_ids(current_user)
+    
+    # Get prodi details
+    prodi_list = []
+    if accessible_prodis is None:
+        # Full access - get all
+        prodis = await db.prodi.find({}, {"_id": 0}).to_list(100)
+        prodi_list = prodis
+    elif accessible_prodis:
+        prodis = await db.prodi.find({"id": {"$in": accessible_prodis}}, {"_id": 0}).to_list(100)
+        prodi_list = prodis
+    
+    # Get fakultas details
+    fakultas_list = []
+    if accessible_fakultas is None:
+        fakultas = await db.fakultas.find({}, {"_id": 0}).to_list(100)
+        fakultas_list = fakultas
+    elif accessible_fakultas:
+        fakultas = await db.fakultas.find({"id": {"$in": accessible_fakultas}}, {"_id": 0}).to_list(100)
+        fakultas_list = fakultas
+    
+    return {
+        "role": role,
+        "has_full_access": role in ALL_ACCESS_ROLES,
+        "is_management": role in MANAGEMENT_ROLES,
+        "accessible_prodi": prodi_list,
+        "accessible_fakultas": fakultas_list,
+        "prodi_id": current_user.get("prodi_id"),
+        "fakultas_id": current_user.get("fakultas_id")
+    }
+
 @auth_router.put("/change-password")
 async def change_password(
     old_password: str,
