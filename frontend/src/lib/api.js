@@ -188,7 +188,7 @@ export const passwordResetAPI = {
 export const usersAPI = {
   getAll: () => api.get('/users'),
   toggleActive: (id) => api.put(`/users/${id}/toggle-active`),
-  generateResetToken: (id) => api.post(`/users/${id}/generate-reset-token`),
+  generateNewPassword: (id) => api.post(`/users/${id}/generate-new-password`),
 };
 
 // Keuangan (Admin)
