@@ -128,6 +128,18 @@ const Login = () => {
                 <code className="text-xs bg-slate-200 px-2 py-1 rounded">NIP: 1234567890 / admin123</code>
               </div>
               <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
+                <span className="text-slate-600">Rektor</span>
+                <code className="text-xs bg-slate-200 px-2 py-1 rounded">NIP: RKT001 / rektor123</code>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
+                <span className="text-slate-600">Dekan</span>
+                <code className="text-xs bg-slate-200 px-2 py-1 rounded">NIP: DKN001 / dekan123</code>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
+                <span className="text-slate-600">Kaprodi</span>
+                <code className="text-xs bg-slate-200 px-2 py-1 rounded">NIP: KPD001 / kaprodi123</code>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
                 <span className="text-slate-600">Mahasiswa</span>
                 <code className="text-xs bg-slate-200 px-2 py-1 rounded">NIM: 2024001 / password</code>
               </div>
