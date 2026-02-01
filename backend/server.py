@@ -562,6 +562,98 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Token tidak valid")
 
+# ==================== ROLE-BASED ACCESS HELPERS ====================
+
+async def get_accessible_prodi_ids(user: dict) -> Optional[List[str]]:
+    """
+    Returns list of prodi_ids the user can access based on their role.
+    Returns None if user has full access (admin/rektor).
+    """
+    role = user.get("role")
+    
+    # Admin dan Rektor punya akses penuh
+    if role in ALL_ACCESS_ROLES:
+        return None
+    
+    # Dekan: akses semua prodi di fakultasnya
+    if role == ROLE_DEKAN:
+        fakultas_id = user.get("fakultas_id")
+        if not fakultas_id:
+            return []
+        prodis = await db.prodi.find({"fakultas_id": fakultas_id}, {"_id": 0, "id": 1}).to_list(100)
+        return [p["id"] for p in prodis]
+    
+    # Kaprodi: hanya akses prodi-nya sendiri
+    if role == ROLE_KAPRODI:
+        prodi_id = user.get("prodi_id")
+        return [prodi_id] if prodi_id else []
+    
+    # Dosen/Mahasiswa: tidak punya akses management
+    return []
+
+async def get_accessible_fakultas_ids(user: dict) -> Optional[List[str]]:
+    """
+    Returns list of fakultas_ids the user can access based on their role.
+    Returns None if user has full access (admin/rektor).
+    """
+    role = user.get("role")
+    
+    if role in ALL_ACCESS_ROLES:
+        return None
+    
+    if role == ROLE_DEKAN:
+        fakultas_id = user.get("fakultas_id")
+        return [fakultas_id] if fakultas_id else []
+    
+    if role == ROLE_KAPRODI:
+        prodi_id = user.get("prodi_id")
+        if prodi_id:
+            prodi = await db.prodi.find_one({"id": prodi_id}, {"_id": 0})
+            if prodi:
+                return [prodi.get("fakultas_id")]
+        return []
+    
+    return []
+
+def check_management_access(user: dict):
+    """Check if user has management access (admin, rektor, dekan, kaprodi)"""
+    if user.get("role") not in MANAGEMENT_ROLES:
+        raise HTTPException(status_code=403, detail="Akses ditolak. Anda tidak memiliki hak akses manajemen.")
+
+def check_admin_access(user: dict):
+    """Check if user has full admin access (admin only)"""
+    if user.get("role") != ROLE_ADMIN:
+        raise HTTPException(status_code=403, detail="Akses ditolak. Hanya admin yang dapat melakukan aksi ini.")
+
+def check_full_access(user: dict):
+    """Check if user has full access (admin or rektor)"""
+    if user.get("role") not in ALL_ACCESS_ROLES:
+        raise HTTPException(status_code=403, detail="Akses ditolak. Hanya admin/rektor yang dapat melakukan aksi ini.")
+
+async def filter_by_prodi_access(query: dict, user: dict, prodi_field: str = "prodi_id") -> dict:
+    """Add prodi filter to query based on user's role access"""
+    accessible_prodis = await get_accessible_prodi_ids(user)
+    if accessible_prodis is not None:  # Not full access
+        if not accessible_prodis:  # Empty list = no access
+            query[prodi_field] = {"$in": []}
+        else:
+            query[prodi_field] = {"$in": accessible_prodis}
+    return query
+
+async def can_access_prodi(user: dict, prodi_id: str) -> bool:
+    """Check if user can access a specific prodi"""
+    accessible_prodis = await get_accessible_prodi_ids(user)
+    if accessible_prodis is None:  # Full access
+        return True
+    return prodi_id in accessible_prodis
+
+async def can_access_fakultas(user: dict, fakultas_id: str) -> bool:
+    """Check if user can access a specific fakultas"""
+    accessible_fakultas = await get_accessible_fakultas_ids(user)
+    if accessible_fakultas is None:  # Full access
+        return True
+    return fakultas_id in accessible_fakultas
+
 def calculate_nilai(tugas: float = 0, uts: float = 0, uas: float = 0) -> tuple:
     # Bobot: Tugas 30%, UTS 30%, UAS 40%
     nilai_akhir = (tugas * 0.3) + (uts * 0.3) + (uas * 0.4)
