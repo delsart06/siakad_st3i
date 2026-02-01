@@ -2516,12 +2516,14 @@ async def verify_reset_token(token: str):
         "user_name": user["nama"] if user else None
     }
 
-# Admin generate reset token for user
-@api_router.post("/users/{user_id}/generate-reset-token")
-async def admin_generate_reset_token(
+# Admin generate new random password for user
+@api_router.post("/users/{user_id}/generate-new-password")
+async def admin_generate_new_password(
     user_id: str,
     current_user: dict = Depends(get_current_user)
 ):
+    import random
+    
     if current_user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Akses ditolak")
     
@@ -2529,25 +2531,22 @@ async def admin_generate_reset_token(
     if not user:
         raise HTTPException(status_code=404, detail="User tidak ditemukan")
     
-    reset_token = str(uuid.uuid4())
-    expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+    # Generate random 8-digit numeric password
+    new_password = ''.join([str(random.randint(0, 9)) for _ in range(8)])
     
-    await db.password_resets.insert_one({
-        "id": str(uuid.uuid4()),
-        "user_id": user["id"],
-        "email": user["email"],
-        "token": reset_token,
-        "expires_at": expires_at.isoformat(),
-        "used": False,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "generated_by": current_user["id"]
-    })
+    # Hash and update password
+    hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"password": hashed_password}}
+    )
     
     return {
-        "message": f"Token reset untuk {user['email']} berhasil dibuat",
-        "reset_token": reset_token,
-        "reset_url": f"/reset-password?token={reset_token}",
-        "expires_in": "24 jam"
+        "message": f"Password untuk {user['email']} berhasil direset",
+        "new_password": new_password,
+        "user_email": user["email"],
+        "user_name": user.get("nama", user["email"])
     }
 
 # ==================== KEUANGAN (FINANCE) ENDPOINTS ====================
