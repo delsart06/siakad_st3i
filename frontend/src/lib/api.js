@@ -222,4 +222,26 @@ export const mahasiswaKeuanganAPI = {
   createPembayaran: (data) => api.post('/mahasiswa/keuangan/pembayaran', data),
 };
 
+// Biodata (Mahasiswa)
+export const biodataAPI = {
+  getMyBiodata: () => api.get('/mahasiswa/biodata'),
+  createBiodata: (data) => api.post('/mahasiswa/biodata', data),
+  createChangeRequest: (formData) => api.post('/mahasiswa/biodata/change-request', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  getMyChangeRequests: () => api.get('/mahasiswa/biodata/change-requests'),
+};
+
+// Biodata Admin
+export const biodataAdminAPI = {
+  getChangeRequests: (status = null) =>
+    api.get('/biodata/change-requests', { params: { status } }),
+  getChangeRequestDetail: (id) => api.get(`/biodata/change-requests/${id}`),
+  reviewChangeRequest: (id, action, catatan = null) =>
+    api.put(`/biodata/change-requests/${id}/review`, null, { params: { action, catatan } }),
+  getAllBiodata: (prodiId = null, isVerified = null) =>
+    api.get('/biodata/list', { params: { prodi_id: prodiId, is_verified: isVerified } }),
+  getMahasiswaBelumIsi: () => api.get('/biodata/mahasiswa-belum-isi'),
+};
+
 export default api;
