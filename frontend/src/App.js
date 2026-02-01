@@ -5,6 +5,7 @@ import DashboardLayout from './components/layout/DashboardLayout';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
 import Dashboard from './pages/Dashboard';
+import ProfilPage from './pages/ProfilPage';
 import TahunAkademik from './pages/master/TahunAkademik';
 import Fakultas from './pages/master/Fakultas';
 import Prodi from './pages/master/Prodi';
@@ -16,6 +17,7 @@ import Kelas from './pages/akademik/Kelas';
 import ValidasiKRS from './pages/akademik/ValidasiKRS';
 import JadwalKuliah from './pages/akademik/JadwalKuliah';
 import UserManagement from './pages/UserManagement';
+import VerifikasiAkun from './pages/admin/VerifikasiAkun';
 import KRSPage from './pages/mahasiswa/KRSPage';
 import KHSPage from './pages/mahasiswa/KHSPage';
 import TranskripPage from './pages/mahasiswa/TranskripPage';
@@ -45,6 +47,7 @@ function App() {
           {/* Protected Routes */}
           <Route element={<DashboardLayout />}>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/profil" element={<ProfilPage />} />
             
             {/* Master Data */}
             <Route path="/master/tahun-akademik" element={<TahunAkademik />} />
@@ -62,6 +65,7 @@ function App() {
             
             {/* User Management */}
             <Route path="/users" element={<UserManagement />} />
+            <Route path="/verifikasi-akun" element={<VerifikasiAkun />} />
             
             {/* Keuangan (Admin) */}
             <Route path="/keuangan/tagihan" element={<ManajemenTagihan />} />
