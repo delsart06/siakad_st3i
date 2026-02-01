@@ -112,11 +112,16 @@ Build a comprehensive SIAKAD (Sistem Informasi Akademik) for Indonesian universi
   - **Lihat Dokumen Pendukung** - Preview KTP, KK, Akte yang diupload
   - **Approve/Reject** - Setujui atau tolak dengan catatan
 - ✅ **Password Reset:**
-  - Self-service forgot password flow
+  - Lupa password dengan approval admin (user input NIM/NIDN/NIP + password baru → admin approve)
   - Admin generate password baru langsung (8 digit angka acak)
-  - Password langsung berubah tanpa perlu email
-  - **Lupa Password Page** - Request reset token via email
-  - **Reset Password Page** - Set new password with token validation
+- ✅ **Login dengan NIM/NIDN/NIP:**
+  - Mahasiswa login dengan NIM
+  - Dosen login dengan NIDN
+  - Admin login dengan NIP
+- ✅ **Ganti Foto Profil dengan Approval:**
+  - User upload foto baru → Admin review → Approve/Reject
+  - Halaman Profil dengan preview foto dan riwayat pengajuan
+  - Admin: Halaman Verifikasi Akun untuk review password & foto
 - ✅ **PDF Components:**
   - KRSPdf - PDF template untuk cetak KRS
   - KHSPdf - PDF template untuk cetak KHS
