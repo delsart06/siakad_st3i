@@ -141,7 +141,7 @@ const Login = () => {
               </div>
               <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
                 <span className="text-slate-600">Mahasiswa</span>
-                <code className="text-xs bg-slate-200 px-2 py-1 rounded">NIM: 2024001 / password</code>
+                <code className="text-xs bg-slate-200 px-2 py-1 rounded">NIM: 2024001 / 01619924</code>
               </div>
             </div>
           </div>
