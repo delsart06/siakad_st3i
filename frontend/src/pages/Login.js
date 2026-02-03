@@ -122,7 +122,7 @@ const Login = () => {
 
           <div className="mt-6 pt-6 border-t border-slate-200">
             <p className="text-center text-sm text-slate-500 mb-3">Demo Akun:</p>
-            <div className="space-y-2 text-sm">
+            <div className="space-y-2 text-sm max-h-64 overflow-y-auto">
               <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
                 <span className="text-slate-600">Admin</span>
                 <code className="text-xs bg-slate-200 px-2 py-1 rounded">NIP: 1234567890 / admin123</code>
@@ -131,13 +131,33 @@ const Login = () => {
                 <span className="text-slate-600">Rektor</span>
                 <code className="text-xs bg-slate-200 px-2 py-1 rounded">NIP: RKT001 / rektor123</code>
               </div>
-              <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
-                <span className="text-slate-600">Dekan</span>
+              <div className="flex justify-between items-center p-2 bg-amber-50 rounded-lg">
+                <div>
+                  <span className="text-slate-600">Dekan FT</span>
+                  <p className="text-xs text-slate-400">Fak. Teknik</p>
+                </div>
                 <code className="text-xs bg-slate-200 px-2 py-1 rounded">NIP: DKN001 / dekan123</code>
               </div>
-              <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
-                <span className="text-slate-600">Kaprodi</span>
+              <div className="flex justify-between items-center p-2 bg-amber-50 rounded-lg">
+                <div>
+                  <span className="text-slate-600">Dekan FE</span>
+                  <p className="text-xs text-slate-400">Fak. Ekonomi</p>
+                </div>
+                <code className="text-xs bg-slate-200 px-2 py-1 rounded">NIP: DKN002 / dekan123</code>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-cyan-50 rounded-lg">
+                <div>
+                  <span className="text-slate-600">Kaprodi TI</span>
+                  <p className="text-xs text-slate-400">Teknik Informatika</p>
+                </div>
                 <code className="text-xs bg-slate-200 px-2 py-1 rounded">NIP: KPD001 / kaprodi123</code>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-cyan-50 rounded-lg">
+                <div>
+                  <span className="text-slate-600">Kaprodi MNJ</span>
+                  <p className="text-xs text-slate-400">Manajemen</p>
+                </div>
+                <code className="text-xs bg-slate-200 px-2 py-1 rounded">NIP: KPD003 / kaprodi123</code>
               </div>
               <div className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
                 <span className="text-slate-600">Mahasiswa</span>
