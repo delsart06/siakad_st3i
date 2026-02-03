@@ -66,6 +66,28 @@ ROLE_MAHASISWA = "mahasiswa"   # Student
 MANAGEMENT_ROLES = [ROLE_ADMIN, ROLE_REKTOR, ROLE_DEKAN, ROLE_KAPRODI]
 ALL_ACCESS_ROLES = [ROLE_ADMIN, ROLE_REKTOR]
 
+# Available Modules for Access Control
+AVAILABLE_MODULES = [
+    {"id": "master_data", "name": "Master Data", "description": "Kelola data master (Tahun Akademik, Fakultas, Prodi, dll)"},
+    {"id": "mahasiswa", "name": "Data Mahasiswa", "description": "Kelola data mahasiswa"},
+    {"id": "dosen", "name": "Data Dosen", "description": "Kelola data dosen"},
+    {"id": "akademik", "name": "Akademik", "description": "Kelola kelas, jadwal, KRS"},
+    {"id": "keuangan", "name": "Keuangan", "description": "Kelola tagihan dan pembayaran"},
+    {"id": "biodata", "name": "Verifikasi Biodata", "description": "Verifikasi perubahan biodata"},
+    {"id": "user_management", "name": "Manajemen User", "description": "Kelola akun pengguna"},
+    {"id": "verifikasi_akun", "name": "Verifikasi Akun", "description": "Verifikasi reset password dan foto profil"},
+]
+
+# Default modules per role
+DEFAULT_MODULES_BY_ROLE = {
+    "admin": ["master_data", "mahasiswa", "dosen", "akademik", "keuangan", "biodata", "user_management", "verifikasi_akun"],
+    "rektor": ["master_data", "mahasiswa", "dosen", "akademik", "keuangan", "biodata", "user_management", "verifikasi_akun"],
+    "dekan": ["master_data", "mahasiswa", "dosen", "akademik", "keuangan", "biodata"],
+    "kaprodi": ["mahasiswa", "dosen", "akademik", "keuangan", "biodata"],
+    "dosen": [],
+    "mahasiswa": [],
+}
+
 # User & Auth Models
 class UserBase(BaseModel):
     email: EmailStr
@@ -75,6 +97,7 @@ class UserBase(BaseModel):
     foto_profil: Optional[str] = None
     prodi_id: Optional[str] = None      # For kaprodi - their prodi
     fakultas_id: Optional[str] = None   # For dekan - their fakultas
+    modules_access: Optional[List[str]] = None  # Custom module access list
 
 class UserCreate(UserBase):
     password: str
@@ -88,6 +111,9 @@ class UserResponse(UserBase):
     is_active: bool = True
     prodi_id: Optional[str] = None      # For kaprodi
     fakultas_id: Optional[str] = None   # For dekan
+    modules_access: Optional[List[str]] = None
+    prodi_nama: Optional[str] = None    # For display
+    fakultas_nama: Optional[str] = None # For display
 
 class TokenResponse(BaseModel):
     access_token: str
