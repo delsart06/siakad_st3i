@@ -2416,6 +2416,24 @@ async def get_available_modules(current_user: dict = Depends(get_current_user)):
 class ModulesAccessUpdate(BaseModel):
     modules: List[str]
 
+class UserCreateRequest(BaseModel):
+    email: EmailStr
+    nama: str
+    role: str
+    user_id_number: str
+    password: str
+    prodi_id: Optional[str] = None
+    fakultas_id: Optional[str] = None
+    modules_access: Optional[List[str]] = None
+
+class UserUpdateRequest(BaseModel):
+    nama: Optional[str] = None
+    email: Optional[EmailStr] = None
+    role: Optional[str] = None
+    prodi_id: Optional[str] = None
+    fakultas_id: Optional[str] = None
+    modules_access: Optional[List[str]] = None
+
 @api_router.put("/users/{user_id}/modules-access")
 async def update_user_modules_access(
     user_id: str,
