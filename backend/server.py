@@ -1716,8 +1716,12 @@ async def create_kelas(
     data: KelasCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Check management access
+    check_management_access(current_user)
+    
+    # Check if user can access the target prodi
+    if data.prodi_id and not await can_access_prodi(current_user, data.prodi_id):
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke program studi ini")
     
     item_id = str(uuid.uuid4())
     doc = {**data.model_dump(), "id": item_id}
@@ -1739,8 +1743,17 @@ async def update_kelas(
     data: KelasCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Check management access
+    check_management_access(current_user)
+    
+    # Check existing kelas
+    kelas = await db.kelas.find_one({"id": item_id}, {"_id": 0})
+    if not kelas:
+        raise HTTPException(status_code=404, detail="Kelas tidak ditemukan")
+    
+    # Check if user can access the kelas's prodi
+    if kelas.get("prodi_id") and not await can_access_prodi(current_user, kelas["prodi_id"]):
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke kelas ini")
     
     await db.kelas.update_one({"id": item_id}, {"$set": data.model_dump()})
     updated = await db.kelas.find_one({"id": item_id}, {"_id": 0})
@@ -1761,8 +1774,17 @@ async def delete_kelas(
     item_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Check management access
+    check_management_access(current_user)
+    
+    # Check existing kelas
+    kelas = await db.kelas.find_one({"id": item_id}, {"_id": 0})
+    if not kelas:
+        raise HTTPException(status_code=404, detail="Kelas tidak ditemukan")
+    
+    # Check if user can access the kelas's prodi
+    if kelas.get("prodi_id") and not await can_access_prodi(current_user, kelas["prodi_id"]):
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke kelas ini")
     
     result = await db.kelas.delete_one({"id": item_id})
     if result.deleted_count == 0:
