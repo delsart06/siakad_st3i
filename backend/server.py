@@ -1662,6 +1662,7 @@ async def create_dosen(
         "email": data.email,
         "nama": data.nama,
         "role": "dosen",
+        "user_id_number": data.nidn,  # NIDN as user_id_number for login
         "password": hash_password(data.password),
         "is_active": True,
         "created_at": datetime.now(timezone.utc).isoformat()
