@@ -3597,8 +3597,11 @@ async def get_all_tagihan(
     prodi_id: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Check management access
+    check_management_access(current_user)
+    
+    # Get accessible prodis for filtering
+    accessible_prodis = await get_accessible_prodi_ids(current_user)
     
     # Build query
     pipeline = []
@@ -3622,6 +3625,11 @@ async def get_all_tagihan(
         # Filter by prodi if specified
         if prodi_id and mhs and mhs.get("prodi_id") != prodi_id:
             continue
+        
+        # Filter by accessible prodi (role-based)
+        if accessible_prodis is not None and mhs:
+            if mhs.get("prodi_id") not in accessible_prodis:
+                continue
         
         ta = await db.tahun_akademik.find_one({"id": item["tahun_akademik_id"]}, {"_id": 0})
         kategori = await db.kategori_ukt.find_one({"id": item["kategori_ukt_id"]}, {"_id": 0})
@@ -3652,8 +3660,13 @@ async def create_tagihan(
     data: TagihanUKTCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Check management access
+    check_management_access(current_user)
+    
+    # Check if user can access the mahasiswa's prodi
+    mhs = await db.mahasiswa.find_one({"id": data.mahasiswa_id}, {"_id": 0})
+    if mhs and not await can_access_prodi(current_user, mhs.get("prodi_id")):
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke mahasiswa ini")
     
     # Check if tagihan already exists for this mahasiswa and tahun akademik
     existing = await db.tagihan_ukt.find_one({
