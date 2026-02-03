@@ -2379,7 +2379,209 @@ async def get_users(current_user: dict = Depends(get_current_user)):
             ]}
     
     users = await db.users.find(query, {"_id": 0, "password": 0}).to_list(500)
-    return [UserResponse(**u) for u in users]
+    
+    # Enrich with prodi_nama and fakultas_nama
+    result = []
+    for u in users:
+        prodi_nama = None
+        fakultas_nama = None
+        
+        if u.get("prodi_id"):
+            prodi = await db.prodi.find_one({"id": u["prodi_id"]}, {"_id": 0})
+            if prodi:
+                prodi_nama = prodi.get("nama")
+        
+        if u.get("fakultas_id"):
+            fakultas = await db.fakultas.find_one({"id": u["fakultas_id"]}, {"_id": 0})
+            if fakultas:
+                fakultas_nama = fakultas.get("nama")
+        
+        # If user doesn't have modules_access, use default based on role
+        if not u.get("modules_access"):
+            u["modules_access"] = DEFAULT_MODULES_BY_ROLE.get(u.get("role"), [])
+        
+        result.append(UserResponse(**u, prodi_nama=prodi_nama, fakultas_nama=fakultas_nama))
+    
+    return result
+
+@api_router.get("/users/available-modules")
+async def get_available_modules(current_user: dict = Depends(get_current_user)):
+    """Get list of available modules for access control"""
+    check_management_access(current_user)
+    return {
+        "modules": AVAILABLE_MODULES,
+        "default_by_role": DEFAULT_MODULES_BY_ROLE
+    }
+
+@api_router.put("/users/{user_id}/modules-access")
+async def update_user_modules_access(
+    user_id: str,
+    modules: List[str],
+    current_user: dict = Depends(get_current_user)
+):
+    """Update modules access for a user"""
+    check_admin_access(current_user)
+    
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User tidak ditemukan")
+    
+    # Validate modules
+    valid_module_ids = [m["id"] for m in AVAILABLE_MODULES]
+    invalid_modules = [m for m in modules if m not in valid_module_ids]
+    if invalid_modules:
+        raise HTTPException(status_code=400, detail=f"Modul tidak valid: {invalid_modules}")
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"modules_access": modules}}
+    )
+    
+    return {"message": "Akses modul berhasil diperbarui", "modules_access": modules}
+
+@api_router.post("/users/create")
+async def create_user(
+    email: str,
+    nama: str,
+    role: str,
+    user_id_number: str,
+    password: str,
+    prodi_id: Optional[str] = None,
+    fakultas_id: Optional[str] = None,
+    modules_access: Optional[List[str]] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create new user with role and prodi/fakultas assignment"""
+    check_admin_access(current_user)
+    
+    # Validate role
+    valid_roles = ["admin", "rektor", "dekan", "kaprodi", "dosen", "mahasiswa"]
+    if role not in valid_roles:
+        raise HTTPException(status_code=400, detail=f"Role harus salah satu dari: {', '.join(valid_roles)}")
+    
+    # Validate required fields based on role
+    if role == "kaprodi" and not prodi_id:
+        raise HTTPException(status_code=400, detail="Prodi harus diisi untuk role Kaprodi")
+    
+    if role == "dekan" and not fakultas_id:
+        raise HTTPException(status_code=400, detail="Fakultas harus diisi untuk role Dekan")
+    
+    # Check if email or user_id_number exists
+    existing = await db.users.find_one({"$or": [
+        {"email": email},
+        {"user_id_number": user_id_number}
+    ]})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email atau NIP/NIM/NIDN sudah terdaftar")
+    
+    # Verify prodi/fakultas exists
+    if prodi_id:
+        prodi = await db.prodi.find_one({"id": prodi_id})
+        if not prodi:
+            raise HTTPException(status_code=400, detail="Program studi tidak ditemukan")
+    
+    if fakultas_id:
+        fakultas = await db.fakultas.find_one({"id": fakultas_id})
+        if not fakultas:
+            raise HTTPException(status_code=400, detail="Fakultas tidak ditemukan")
+    
+    # Use default modules if not provided
+    if modules_access is None:
+        modules_access = DEFAULT_MODULES_BY_ROLE.get(role, [])
+    
+    user_id = str(uuid.uuid4())
+    user_doc = {
+        "id": user_id,
+        "email": email,
+        "nama": nama,
+        "role": role,
+        "user_id_number": user_id_number,
+        "password": hash_password(password),
+        "is_active": True,
+        "prodi_id": prodi_id,
+        "fakultas_id": fakultas_id,
+        "modules_access": modules_access,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    # Get names for response
+    prodi_nama = None
+    fakultas_nama = None
+    if prodi_id:
+        prodi = await db.prodi.find_one({"id": prodi_id}, {"_id": 0})
+        prodi_nama = prodi.get("nama") if prodi else None
+    if fakultas_id:
+        fakultas = await db.fakultas.find_one({"id": fakultas_id}, {"_id": 0})
+        fakultas_nama = fakultas.get("nama") if fakultas else None
+    
+    return {
+        "id": user_id,
+        "email": email,
+        "nama": nama,
+        "role": role,
+        "user_id_number": user_id_number,
+        "prodi_id": prodi_id,
+        "prodi_nama": prodi_nama,
+        "fakultas_id": fakultas_id,
+        "fakultas_nama": fakultas_nama,
+        "modules_access": modules_access,
+        "message": f"User {role} berhasil dibuat"
+    }
+
+@api_router.put("/users/{user_id}/update")
+async def update_user(
+    user_id: str,
+    nama: Optional[str] = None,
+    email: Optional[str] = None,
+    role: Optional[str] = None,
+    prodi_id: Optional[str] = None,
+    fakultas_id: Optional[str] = None,
+    modules_access: Optional[List[str]] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user details"""
+    check_admin_access(current_user)
+    
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User tidak ditemukan")
+    
+    update_data = {}
+    
+    if nama:
+        update_data["nama"] = nama
+    if email:
+        # Check if email already used by another user
+        existing = await db.users.find_one({"email": email, "id": {"$ne": user_id}})
+        if existing:
+            raise HTTPException(status_code=400, detail="Email sudah digunakan")
+        update_data["email"] = email
+    if role:
+        valid_roles = ["admin", "rektor", "dekan", "kaprodi", "dosen", "mahasiswa"]
+        if role not in valid_roles:
+            raise HTTPException(status_code=400, detail=f"Role tidak valid")
+        update_data["role"] = role
+    if prodi_id is not None:
+        if prodi_id:
+            prodi = await db.prodi.find_one({"id": prodi_id})
+            if not prodi:
+                raise HTTPException(status_code=400, detail="Prodi tidak ditemukan")
+        update_data["prodi_id"] = prodi_id if prodi_id else None
+    if fakultas_id is not None:
+        if fakultas_id:
+            fakultas = await db.fakultas.find_one({"id": fakultas_id})
+            if not fakultas:
+                raise HTTPException(status_code=400, detail="Fakultas tidak ditemukan")
+        update_data["fakultas_id"] = fakultas_id if fakultas_id else None
+    if modules_access is not None:
+        update_data["modules_access"] = modules_access
+    
+    if update_data:
+        await db.users.update_one({"id": user_id}, {"$set": update_data})
+    
+    return {"message": "User berhasil diperbarui"}
 
 @api_router.put("/users/{user_id}/toggle-active")
 async def toggle_user_active(
