@@ -1307,9 +1307,15 @@ async def get_kurikulum(
     prodi_id: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
+    # Check management access
+    check_management_access(current_user)
+    
     query = {}
     if prodi_id:
         query["prodi_id"] = prodi_id
+    
+    # Apply role-based prodi filter
+    query = await filter_by_prodi_access(query, current_user, "prodi_id")
     
     items = await db.kurikulum.find(query, {"_id": 0}).sort("tahun", -1).to_list(100)
     
@@ -1324,8 +1330,12 @@ async def create_kurikulum(
     data: KurikulumCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Check management access
+    check_management_access(current_user)
+    
+    # Check if user can access the target prodi
+    if not await can_access_prodi(current_user, data.prodi_id):
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke program studi ini")
     
     item_id = str(uuid.uuid4())
     doc = {**data.model_dump(), "id": item_id}
@@ -1340,8 +1350,16 @@ async def update_kurikulum(
     data: KurikulumCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Check management access
+    check_management_access(current_user)
+    
+    kurikulum = await db.kurikulum.find_one({"id": item_id}, {"_id": 0})
+    if not kurikulum:
+        raise HTTPException(status_code=404, detail="Kurikulum tidak ditemukan")
+    
+    # Check if user can access the kurikulum's prodi
+    if not await can_access_prodi(current_user, kurikulum["prodi_id"]):
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke kurikulum ini")
     
     await db.kurikulum.update_one({"id": item_id}, {"$set": data.model_dump()})
     updated = await db.kurikulum.find_one({"id": item_id}, {"_id": 0})
@@ -1353,8 +1371,16 @@ async def delete_kurikulum(
     item_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Check management access
+    check_management_access(current_user)
+    
+    kurikulum = await db.kurikulum.find_one({"id": item_id}, {"_id": 0})
+    if not kurikulum:
+        raise HTTPException(status_code=404, detail="Kurikulum tidak ditemukan")
+    
+    # Check if user can access the kurikulum's prodi
+    if not await can_access_prodi(current_user, kurikulum["prodi_id"]):
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke kurikulum ini")
     
     result = await db.kurikulum.delete_one({"id": item_id})
     if result.deleted_count == 0:
@@ -1365,11 +1391,37 @@ async def delete_kurikulum(
 @master_router.get("/mata-kuliah", response_model=List[MataKuliahResponse])
 async def get_mata_kuliah(
     kurikulum_id: Optional[str] = None,
+    prodi_id: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
+    # Check management access
+    check_management_access(current_user)
+    
     query = {}
     if kurikulum_id:
         query["kurikulum_id"] = kurikulum_id
+    
+    # If prodi_id filter, get kurikulums for that prodi first
+    if prodi_id:
+        kurikulums = await db.kurikulum.find({"prodi_id": prodi_id}, {"_id": 0, "id": 1}).to_list(100)
+        kurikulum_ids = [k["id"] for k in kurikulums]
+        if kurikulum_ids:
+            query["kurikulum_id"] = {"$in": kurikulum_ids}
+        else:
+            return []
+    
+    # Apply role-based prodi filter via kurikulum
+    accessible_prodis = await get_accessible_prodi_ids(current_user)
+    if accessible_prodis is not None:
+        kurikulums = await db.kurikulum.find({"prodi_id": {"$in": accessible_prodis}}, {"_id": 0, "id": 1}).to_list(100)
+        accessible_kurikulum_ids = [k["id"] for k in kurikulums]
+        if accessible_kurikulum_ids:
+            if "kurikulum_id" in query and isinstance(query["kurikulum_id"], dict):
+                query["kurikulum_id"]["$in"] = list(set(query["kurikulum_id"]["$in"]) & set(accessible_kurikulum_ids))
+            else:
+                query["kurikulum_id"] = {"$in": accessible_kurikulum_ids}
+        else:
+            return []
     
     items = await db.mata_kuliah.find(query, {"_id": 0}).sort("semester", 1).to_list(500)
     
