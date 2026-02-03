@@ -280,3 +280,41 @@ Build a comprehensive SIA (Sistem Informasi Akademik) for Sekolah Tinggi Teologi
 | Dekan | DKN001 | dekan123 |
 | Kaprodi | KPD001 | kaprodi123 |
 | Mahasiswa | 2024001 | 01619924 |
+
+### 2026-02-03: User Management Enhancement - Module Access Control & User Creation
+**Changes:**
+- Added granular module access control per user
+- Added "Tambah User" feature with role-based form fields
+- Added "Atur Akses Modul" feature to customize module permissions per user
+- Added "Edit User" feature to modify user details and role
+
+**Available Modules:**
+| Module ID | Name | Description |
+|-----------|------|-------------|
+| master_data | Master Data | Kelola data master (Tahun Akademik, Fakultas, Prodi, dll) |
+| mahasiswa | Data Mahasiswa | Kelola data mahasiswa |
+| dosen | Data Dosen | Kelola data dosen |
+| akademik | Akademik | Kelola kelas, jadwal, KRS |
+| keuangan | Keuangan | Kelola tagihan dan pembayaran |
+| biodata | Verifikasi Biodata | Verifikasi perubahan biodata |
+| user_management | Manajemen User | Kelola akun pengguna |
+| verifikasi_akun | Verifikasi Akun | Verifikasi reset password dan foto profil |
+
+**Default Modules by Role:**
+- Admin/Rektor: All modules
+- Dekan: master_data, mahasiswa, dosen, akademik, keuangan, biodata
+- Kaprodi: mahasiswa, dosen, akademik, keuangan, biodata
+- Dosen/Mahasiswa: No management modules
+
+**New Backend Endpoints:**
+- GET `/api/users/available-modules` - Get list of all available modules
+- PUT `/api/users/{id}/modules-access` - Update module access for a user
+- POST `/api/users/create` - Create new user with role assignment
+- PUT `/api/users/{id}/update` - Update user details
+
+**Frontend Changes:**
+- UserManagement.js fully redesigned with:
+  - Tambah User dialog with dynamic form fields based on role
+  - Edit User dialog
+  - Atur Akses Modul dialog with checkbox list
+  - Column showing Fakultas/Prodi assignment
