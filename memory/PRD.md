@@ -249,3 +249,34 @@ Build a comprehensive SIA (Sistem Informasi Akademik) for Sekolah Tinggi Teologi
 - `frontend/src/pages/mahasiswa/TranskripPage.js` - Footer
 - `frontend/src/components/pdf/KRSPdf.js` - PDF header
 - `frontend/src/components/pdf/KHSPdf.js` - PDF header
+
+### 2026-02-01: Hierarchical Role-Based Access Control (RBAC)
+**Changes:**
+- Implemented hierarchical role system with 6 roles: Admin, Rektor, Dekan, Kaprodi, Dosen, Mahasiswa
+- Admin & Rektor have full access to all data
+- Dekan can only access data within their assigned fakultas
+- Kaprodi can only access data within their assigned prodi
+- Added helper functions for role-based filtering: `get_accessible_prodi_ids()`, `filter_by_prodi_access()`, `can_access_prodi()`
+- Added new endpoints: `/api/auth/my-access`, `/api/users/management`, `/api/users/{id}/update-role`
+- Updated sidebar menus to show relevant menus based on user role
+
+**Backend Changes:**
+- Added role constants: `ROLE_ADMIN`, `ROLE_REKTOR`, `ROLE_DEKAN`, `ROLE_KAPRODI`, `ROLE_DOSEN`, `ROLE_MAHASISWA`
+- Added `prodi_id` and `fakultas_id` fields to User model for role assignment
+- Implemented `check_management_access()`, `check_admin_access()`, `check_full_access()` helper functions
+- Updated mahasiswa, prodi, and user endpoints with role-based filtering
+
+**Frontend Changes:**
+- Updated Sidebar.js to conditionally show menus based on role
+- Updated UserManagement.js with role badge colors for all roles
+- Updated Login.js with demo accounts for all roles
+- Added `authAPI.myAccess()` endpoint in api.js
+
+**Test Credentials:**
+| Role | User ID | Password |
+|------|---------|----------|
+| Admin | 1234567890 | admin123 |
+| Rektor | RKT001 | rektor123 |
+| Dekan | DKN001 | dekan123 |
+| Kaprodi | KPD001 | kaprodi123 |
+| Mahasiswa | 2024001 | 01619924 |
