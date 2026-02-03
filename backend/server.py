@@ -1566,9 +1566,15 @@ async def get_dosen(
     prodi_id: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
+    # Check management access
+    check_management_access(current_user)
+    
     query = {}
     if prodi_id:
         query["prodi_id"] = prodi_id
+    
+    # Apply role-based prodi filter
+    query = await filter_by_prodi_access(query, current_user, "prodi_id")
     
     items = await db.dosen.find(query, {"_id": 0}).sort("nama", 1).to_list(500)
     
@@ -1584,8 +1590,12 @@ async def create_dosen(
     data: DosenCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Check management access
+    check_management_access(current_user)
+    
+    # Check if user can access the target prodi
+    if data.prodi_id and not await can_access_prodi(current_user, data.prodi_id):
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke program studi ini")
     
     # Check if NIDN exists
     existing = await db.dosen.find_one({"nidn": data.nidn})
