@@ -208,6 +208,11 @@ export const usersAPI = {
   createManagementUser: (data) => api.post('/users/management', data),
   updateRole: (id, role, prodiId = null, fakultasId = null) => 
     api.put(`/users/${id}/update-role`, null, { params: { role, prodi_id: prodiId, fakultas_id: fakultasId } }),
+  // New endpoints
+  getAvailableModules: () => api.get('/users/available-modules'),
+  updateModulesAccess: (id, modules) => api.put(`/users/${id}/modules-access`, null, { params: { modules } }),
+  createUser: (data) => api.post('/users/create', null, { params: data }),
+  updateUser: (id, data) => api.put(`/users/${id}/update`, null, { params: data }),
 };
 
 // Keuangan (Admin)
