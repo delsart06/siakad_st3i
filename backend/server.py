@@ -1534,6 +1534,7 @@ async def create_mahasiswa(
         "email": data.email,
         "nama": data.nama,
         "role": "mahasiswa",
+        "user_id_number": data.nim,  # NIM as user_id_number for login
         "password": hash_password(data.password),
         "is_active": True,
         "created_at": datetime.now(timezone.utc).isoformat()
