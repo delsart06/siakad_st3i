@@ -1672,13 +1672,22 @@ async def delete_dosen(
 async def get_kelas(
     tahun_akademik_id: Optional[str] = None,
     mata_kuliah_id: Optional[str] = None,
+    prodi_id: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
+    # Check management access
+    check_management_access(current_user)
+    
     query = {}
     if tahun_akademik_id:
         query["tahun_akademik_id"] = tahun_akademik_id
     if mata_kuliah_id:
         query["mata_kuliah_id"] = mata_kuliah_id
+    if prodi_id:
+        query["prodi_id"] = prodi_id
+    
+    # Apply role-based prodi filter
+    query = await filter_by_prodi_access(query, current_user, "prodi_id")
     
     items = await db.kelas.find(query, {"_id": 0}).to_list(500)
     
