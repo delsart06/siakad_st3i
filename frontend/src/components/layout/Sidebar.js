@@ -46,6 +46,16 @@ const Sidebar = () => {
   // Check if user has management role (admin, rektor, dekan, kaprodi)
   const isManagement = ['admin', 'rektor', 'dekan', 'kaprodi'].includes(user?.role);
   const isFullAccess = ['admin', 'rektor'].includes(user?.role);
+  
+  // Get user's modules access
+  const modulesAccess = user?.modules_access || [];
+  
+  // Helper function to check if user has access to a specific module
+  const hasModuleAccess = (moduleId) => {
+    // Admin always has full access
+    if (user?.role === 'admin') return true;
+    return modulesAccess.includes(moduleId);
+  };
 
   const adminMenus = [
     {
