@@ -773,6 +773,11 @@ async def login(credentials: UserLogin):
     
     token = create_token(user["id"], user["email"], user["role"])
     
+    # Get modules_access, use default if not set
+    modules_access = user.get("modules_access")
+    if not modules_access:
+        modules_access = DEFAULT_MODULES_BY_ROLE.get(user["role"], [])
+    
     return TokenResponse(
         access_token=token,
         user=UserResponse(
@@ -784,12 +789,18 @@ async def login(credentials: UserLogin):
             user_id_number=user.get("user_id_number"),
             foto_profil=user.get("foto_profil"),
             prodi_id=user.get("prodi_id"),
-            fakultas_id=user.get("fakultas_id")
+            fakultas_id=user.get("fakultas_id"),
+            modules_access=modules_access
         )
     )
 
 @auth_router.get("/me", response_model=UserResponse)
 async def get_me(current_user: dict = Depends(get_current_user)):
+    # Get modules_access, use default if not set
+    modules_access = current_user.get("modules_access")
+    if not modules_access:
+        modules_access = DEFAULT_MODULES_BY_ROLE.get(current_user["role"], [])
+    
     return UserResponse(
         id=current_user["id"],
         email=current_user["email"],
@@ -799,7 +810,8 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         user_id_number=current_user.get("user_id_number"),
         foto_profil=current_user.get("foto_profil"),
         prodi_id=current_user.get("prodi_id"),
-        fakultas_id=current_user.get("fakultas_id")
+        fakultas_id=current_user.get("fakultas_id"),
+        modules_access=modules_access
     )
 
 @auth_router.get("/my-access")
