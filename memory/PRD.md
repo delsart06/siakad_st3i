@@ -9,8 +9,11 @@ Build a comprehensive SIA (Sistem Informasi Akademik) for Sekolah Tinggi Teologi
 
 ### User Personas
 1. **Admin** - Super administrator who manages all master data, users, and academic operations
-2. **Dosen (Lecturer)** - Inputs grades, views assigned classes, validates KRS as Dosen PA, manages presensi
-3. **Mahasiswa (Student)** - Enrolls in courses (KRS), views grades (KHS), downloads transcripts, views jadwal & presensi
+2. **Rektor** - Executive level with full data access across all fakultas and prodi
+3. **Dekan (Dean)** - Faculty head who can access all prodi within their fakultas
+4. **Kaprodi (Head of Study Program)** - Can only access data within their specific prodi
+5. **Dosen (Lecturer)** - Inputs grades, views assigned classes, validates KRS as Dosen PA, manages presensi
+6. **Mahasiswa (Student)** - Enrolls in courses (KRS), views grades (KHS), downloads transcripts, views jadwal & presensi
 
 ### Core Requirements (Static)
 - Tech Stack: FastAPI + React + MongoDB
