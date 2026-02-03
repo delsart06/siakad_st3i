@@ -2413,10 +2413,13 @@ async def get_available_modules(current_user: dict = Depends(get_current_user)):
         "default_by_role": DEFAULT_MODULES_BY_ROLE
     }
 
+class ModulesAccessUpdate(BaseModel):
+    modules: List[str]
+
 @api_router.put("/users/{user_id}/modules-access")
 async def update_user_modules_access(
     user_id: str,
-    modules: List[str],
+    data: ModulesAccessUpdate,
     current_user: dict = Depends(get_current_user)
 ):
     """Update modules access for a user"""
@@ -2428,16 +2431,16 @@ async def update_user_modules_access(
     
     # Validate modules
     valid_module_ids = [m["id"] for m in AVAILABLE_MODULES]
-    invalid_modules = [m for m in modules if m not in valid_module_ids]
+    invalid_modules = [m for m in data.modules if m not in valid_module_ids]
     if invalid_modules:
         raise HTTPException(status_code=400, detail=f"Modul tidak valid: {invalid_modules}")
     
     await db.users.update_one(
         {"id": user_id},
-        {"$set": {"modules_access": modules}}
+        {"$set": {"modules_access": data.modules}}
     )
     
-    return {"message": "Akses modul berhasil diperbarui", "modules_access": modules}
+    return {"message": "Akses modul berhasil diperbarui", "modules_access": data.modules}
 
 @api_router.post("/users/create")
 async def create_user(
