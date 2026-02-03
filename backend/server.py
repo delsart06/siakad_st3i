@@ -3840,8 +3840,11 @@ async def get_all_pembayaran(
     status: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Check management access
+    check_management_access(current_user)
+    
+    # Get accessible prodis for filtering
+    accessible_prodis = await get_accessible_prodi_ids(current_user)
     
     query = {}
     if status:
@@ -3861,6 +3864,11 @@ async def get_all_pembayaran(
         if tagihan:
             mhs = await db.mahasiswa.find_one({"id": tagihan["mahasiswa_id"]}, {"_id": 0})
         
+        # Filter by accessible prodi (role-based)
+        if accessible_prodis is not None and mhs:
+            if mhs.get("prodi_id") not in accessible_prodis:
+                continue
+        
         result.append(PembayaranUKTResponse(
             **item,
             mahasiswa_nama=mhs["nama"] if mhs else None,
@@ -3878,11 +3886,16 @@ async def create_pembayaran(
     if not tagihan:
         raise HTTPException(status_code=404, detail="Tagihan tidak ditemukan")
     
-    # Check if user is admin or owner
-    if current_user["role"] != "admin":
-        mhs = await db.mahasiswa.find_one({"user_id": current_user["id"]}, {"_id": 0})
-        if not mhs or mhs["id"] != tagihan["mahasiswa_id"]:
+    # Check if user is management or owner
+    mhs = await db.mahasiswa.find_one({"id": tagihan["mahasiswa_id"]}, {"_id": 0})
+    if current_user["role"] not in MANAGEMENT_ROLES:
+        owner_mhs = await db.mahasiswa.find_one({"user_id": current_user["id"]}, {"_id": 0})
+        if not owner_mhs or owner_mhs["id"] != tagihan["mahasiswa_id"]:
             raise HTTPException(status_code=403, detail="Akses ditolak")
+    else:
+        # Management role - check prodi access
+        if mhs and not await can_access_prodi(current_user, mhs.get("prodi_id")):
+            raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke mahasiswa ini")
     
     doc = {
         "id": str(uuid.uuid4()),
@@ -3892,8 +3905,6 @@ async def create_pembayaran(
     }
     
     await db.pembayaran_ukt.insert_one(doc)
-    
-    mhs = await db.mahasiswa.find_one({"id": tagihan["mahasiswa_id"]}, {"_id": 0})
     
     return PembayaranUKTResponse(
         **doc,
@@ -3907,12 +3918,19 @@ async def verify_pembayaran(
     data: PembayaranUKTVerify,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Akses ditolak")
+    # Check management access
+    check_management_access(current_user)
     
     pembayaran = await db.pembayaran_ukt.find_one({"id": item_id}, {"_id": 0})
     if not pembayaran:
         raise HTTPException(status_code=404, detail="Pembayaran tidak ditemukan")
+    
+    # Check prodi access via tagihan
+    tagihan = await db.tagihan_ukt.find_one({"id": pembayaran["tagihan_id"]}, {"_id": 0})
+    if tagihan:
+        mhs = await db.mahasiswa.find_one({"id": tagihan["mahasiswa_id"]}, {"_id": 0})
+        if mhs and not await can_access_prodi(current_user, mhs.get("prodi_id")):
+            raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke pembayaran ini")
     
     await db.pembayaran_ukt.update_one(
         {"id": item_id},
