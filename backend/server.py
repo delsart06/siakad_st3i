@@ -2462,14 +2462,7 @@ async def update_user_modules_access(
 
 @api_router.post("/users/create")
 async def create_user(
-    email: str,
-    nama: str,
-    role: str,
-    user_id_number: str,
-    password: str,
-    prodi_id: Optional[str] = None,
-    fakultas_id: Optional[str] = None,
-    modules_access: Optional[List[str]] = None,
+    data: UserCreateRequest,
     current_user: dict = Depends(get_current_user)
 ):
     """Create new user with role and prodi/fakultas assignment"""
@@ -2477,50 +2470,51 @@ async def create_user(
     
     # Validate role
     valid_roles = ["admin", "rektor", "dekan", "kaprodi", "dosen", "mahasiswa"]
-    if role not in valid_roles:
+    if data.role not in valid_roles:
         raise HTTPException(status_code=400, detail=f"Role harus salah satu dari: {', '.join(valid_roles)}")
     
     # Validate required fields based on role
-    if role == "kaprodi" and not prodi_id:
+    if data.role == "kaprodi" and not data.prodi_id:
         raise HTTPException(status_code=400, detail="Prodi harus diisi untuk role Kaprodi")
     
-    if role == "dekan" and not fakultas_id:
+    if data.role == "dekan" and not data.fakultas_id:
         raise HTTPException(status_code=400, detail="Fakultas harus diisi untuk role Dekan")
     
     # Check if email or user_id_number exists
     existing = await db.users.find_one({"$or": [
-        {"email": email},
-        {"user_id_number": user_id_number}
+        {"email": data.email},
+        {"user_id_number": data.user_id_number}
     ]})
     if existing:
         raise HTTPException(status_code=400, detail="Email atau NIP/NIM/NIDN sudah terdaftar")
     
     # Verify prodi/fakultas exists
-    if prodi_id:
-        prodi = await db.prodi.find_one({"id": prodi_id})
+    if data.prodi_id:
+        prodi = await db.prodi.find_one({"id": data.prodi_id})
         if not prodi:
             raise HTTPException(status_code=400, detail="Program studi tidak ditemukan")
     
-    if fakultas_id:
-        fakultas = await db.fakultas.find_one({"id": fakultas_id})
+    if data.fakultas_id:
+        fakultas = await db.fakultas.find_one({"id": data.fakultas_id})
         if not fakultas:
             raise HTTPException(status_code=400, detail="Fakultas tidak ditemukan")
     
     # Use default modules if not provided
+    modules_access = data.modules_access
     if modules_access is None:
-        modules_access = DEFAULT_MODULES_BY_ROLE.get(role, [])
+        modules_access = DEFAULT_MODULES_BY_ROLE.get(data.role, [])
     
     user_id = str(uuid.uuid4())
     user_doc = {
         "id": user_id,
-        "email": email,
-        "nama": nama,
-        "role": role,
-        "user_id_number": user_id_number,
-        "password": hash_password(password),
+        "email": data.email,
+        "nama": data.nama,
+        "role": data.role,
+        "user_id_number": data.user_id_number,
+        "password": hash_password(data.password),
         "is_active": True,
-        "prodi_id": prodi_id,
-        "fakultas_id": fakultas_id,
+        "prodi_id": data.prodi_id,
+        "fakultas_id": data.fakultas_id,
         "modules_access": modules_access,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
@@ -2530,36 +2524,31 @@ async def create_user(
     # Get names for response
     prodi_nama = None
     fakultas_nama = None
-    if prodi_id:
-        prodi = await db.prodi.find_one({"id": prodi_id}, {"_id": 0})
+    if data.prodi_id:
+        prodi = await db.prodi.find_one({"id": data.prodi_id}, {"_id": 0})
         prodi_nama = prodi.get("nama") if prodi else None
-    if fakultas_id:
-        fakultas = await db.fakultas.find_one({"id": fakultas_id}, {"_id": 0})
+    if data.fakultas_id:
+        fakultas = await db.fakultas.find_one({"id": data.fakultas_id}, {"_id": 0})
         fakultas_nama = fakultas.get("nama") if fakultas else None
     
     return {
         "id": user_id,
-        "email": email,
-        "nama": nama,
-        "role": role,
-        "user_id_number": user_id_number,
-        "prodi_id": prodi_id,
+        "email": data.email,
+        "nama": data.nama,
+        "role": data.role,
+        "user_id_number": data.user_id_number,
+        "prodi_id": data.prodi_id,
         "prodi_nama": prodi_nama,
-        "fakultas_id": fakultas_id,
+        "fakultas_id": data.fakultas_id,
         "fakultas_nama": fakultas_nama,
         "modules_access": modules_access,
-        "message": f"User {role} berhasil dibuat"
+        "message": f"User {data.role} berhasil dibuat"
     }
 
 @api_router.put("/users/{user_id}/update")
 async def update_user(
     user_id: str,
-    nama: Optional[str] = None,
-    email: Optional[str] = None,
-    role: Optional[str] = None,
-    prodi_id: Optional[str] = None,
-    fakultas_id: Optional[str] = None,
-    modules_access: Optional[List[str]] = None,
+    data: UserUpdateRequest,
     current_user: dict = Depends(get_current_user)
 ):
     """Update user details"""
@@ -2571,33 +2560,33 @@ async def update_user(
     
     update_data = {}
     
-    if nama:
-        update_data["nama"] = nama
-    if email:
+    if data.nama:
+        update_data["nama"] = data.nama
+    if data.email:
         # Check if email already used by another user
-        existing = await db.users.find_one({"email": email, "id": {"$ne": user_id}})
+        existing = await db.users.find_one({"email": data.email, "id": {"$ne": user_id}})
         if existing:
             raise HTTPException(status_code=400, detail="Email sudah digunakan")
-        update_data["email"] = email
-    if role:
+        update_data["email"] = data.email
+    if data.role:
         valid_roles = ["admin", "rektor", "dekan", "kaprodi", "dosen", "mahasiswa"]
-        if role not in valid_roles:
+        if data.role not in valid_roles:
             raise HTTPException(status_code=400, detail=f"Role tidak valid")
-        update_data["role"] = role
-    if prodi_id is not None:
-        if prodi_id:
-            prodi = await db.prodi.find_one({"id": prodi_id})
+        update_data["role"] = data.role
+    if data.prodi_id is not None:
+        if data.prodi_id:
+            prodi = await db.prodi.find_one({"id": data.prodi_id})
             if not prodi:
                 raise HTTPException(status_code=400, detail="Prodi tidak ditemukan")
-        update_data["prodi_id"] = prodi_id if prodi_id else None
-    if fakultas_id is not None:
-        if fakultas_id:
-            fakultas = await db.fakultas.find_one({"id": fakultas_id})
+        update_data["prodi_id"] = data.prodi_id if data.prodi_id else None
+    if data.fakultas_id is not None:
+        if data.fakultas_id:
+            fakultas = await db.fakultas.find_one({"id": data.fakultas_id})
             if not fakultas:
                 raise HTTPException(status_code=400, detail="Fakultas tidak ditemukan")
-        update_data["fakultas_id"] = fakultas_id if fakultas_id else None
-    if modules_access is not None:
-        update_data["modules_access"] = modules_access
+        update_data["fakultas_id"] = data.fakultas_id if data.fakultas_id else None
+    if data.modules_access is not None:
+        update_data["modules_access"] = data.modules_access
     
     if update_data:
         await db.users.update_one({"id": user_id}, {"$set": update_data})
